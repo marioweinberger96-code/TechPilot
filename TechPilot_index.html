@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TechPilot</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f6f8;color:#17202a}
+header{background:white;padding:22px 18px 16px;position:sticky;top:0;border-bottom:1px solid #ddd}main{max-width:760px;margin:auto;padding:18px 16px 90px}
+h1{margin:0;font-size:28px}h2{font-size:21px}.sub,.small{color:#6b7280;font-size:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card,.step{background:white;border-radius:18px;padding:18px;border:1px solid #e5e7eb;box-shadow:0 2px 10px #0000000a}
+.card strong{display:block;font-size:18px;margin-bottom:5px}.icon{font-size:28px;margin-bottom:8px}
+button{border:0;border-radius:13px;padding:13px 16px;font-size:16px;font-weight:600;background:#1f2937;color:white}.green{background:#1f9d55}.back{background:transparent;color:#374151;padding:4px 0}
+.hidden{display:none}.step{margin:10px 0}label{display:block;font-weight:600;margin:13px 0 6px}
+input,select,textarea{width:100%;padding:13px;border:1px solid #d5dbe1;border-radius:11px;font:inherit;background:white}textarea{min-height:90px}
+.pill{display:inline-block;background:#e9f7ef;color:#147a3e;border-radius:20px;padding:6px 10px;font-size:13px;font-weight:700}
+nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #ddd;display:flex}nav button{background:transparent;color:#4b5563;border-radius:0;flex:1;font-size:13px}
+.photo{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.photo img{width:86px;height:86px;object-fit:cover;border-radius:10px}
+</style></head><body>
+<header><h1>TechPilot</h1><div class="sub">Digitale Baustellenaufnahme für HKLS-, Elektro- und PV-Techniker</div></header>
+<main>
+<section id="home"><h2>Guten Tag 👋</h2><p class="sub">Was möchtest du heute aufnehmen?</p>
+<div class="grid">
+<div class="card" onclick="start('heizung')"><div class="icon">🔥</div><strong>Heizung</strong><span class="small">Sanierung · Wärmepumpe · Neubau</span></div>
+<div class="card" onclick="start('sanitaer')"><div class="icon">🚿</div><strong>Sanitär</strong><span class="small">Wasserleitung · Bad · Neubau</span></div>
+<div class="card" onclick="start('klima')"><div class="icon">❄️</div><strong>Klima</strong><span class="small">Single Split · Multi Split</span></div>
+<div class="card" onclick="start('pv')"><div class="icon">☀️</div><strong>PV</strong><span class="small">Anlage · Speicher · Wallbox</span></div>
+</div></section>
+<section id="project" class="hidden"><button class="back" onclick="show('home')">← Zurück</button><h2 id="title"></h2><span class="pill">Besichtigung läuft</span><div id="steps"></div>
+<button class="green" onclick="alert('✓ Besichtigung abgeschlossen')">✓ Besichtigung abschließen</button></section>
+</main>
+<nav><button onclick="show('home')">⌂<br>Startseite</button><button onclick="show('home')">＋<br>Neues Projekt</button><button onclick="alert('Dashboard kommt als nächster Schritt.')">▣<br>Projekte</button></nav>
+<script>
+const D={
+heizung:["Heizung – Baustellenaufnahme","Auftrag / Kundenwunsch","Heizraum: Kessel / Wärmeerzeuger","Hydraulik: Mischer, direkte Heizkreise, FBH, Heizkörper","Wärmeabgabe: Heizkörper ausreichend?","Puffer / Boiler / Hygiene-Puffer","Regelung / Raumgeräte","Kamin: Durchmesser, Höhe, Zustand, Anschlusshöhe","Außeneinheit / Leitungsweg","Fotos"],
+sanitaer:["Sanitär – Baustellenaufnahme","Auftrag: Wasserleitung, Bad, WC oder Neubau","Leitungen: Meter, Aufputz / Unterputz, Material","Zählergarnitur, Druckminderer, Filter","Bad: Dusche, Badewanne, Waschbecken, WC, Lüfter, Badheizkörper, Waschmaschine","Armaturen: Unterputz / Waschtisch / Farbe","FBH: Rücklauftemperaturbegrenzung / Oventrop Multiblock","Ausstattungskatalog / Wünsche"],
+klima:["Klima – Baustellenaufnahme","Single Split oder Multi Split","Anzahl Geräte / Räume / Leistung","Gerätetyp: Wandgerät oder Deckengerät","Hersteller: Daikin / Samsung / Panasonic / Sinclair / Andere","Montage: Kabelkanal / Unterputz / Spitzboden","Kondensat: Pumpe / fallende Leitung / Waschbecken / Behälter","Außengerät: Standort / Befestigung","Strom: Zuleitung / Sicherung / Zählerkasten / Foto"],
+pv:["PV – Baustellenaufnahme","Wunsch: Anlage / Speicher / Notstrom / Wallbox","Größe / Dachfläche / Ausrichtung","Dach: Bieberschwanz / Bramac / Eternit / Blechfalz / Flachdach","Befestigung: z.B. Schweizer Befestigung","Leitungsweg Dach → Wechselrichter","Wechselrichter: Montageort","Zählerkasten: Standort / Platz / Foto"]
+};
+function show(id){document.querySelectorAll("main section").forEach(x=>x.classList.add("hidden"));document.getElementById(id).classList.remove("hidden")}
+function start(type){let d=D[type],box=document.getElementById("steps");document.getElementById("title").textContent=d[0];box.innerHTML="";
+d.slice(1).forEach((x,i)=>{let s=document.createElement("div");s.className="step";s.innerHTML="<strong>"+(i+1)+". "+x+"</strong>";
+if(x=="Fotos")s.innerHTML+="<input type='file' accept='image/*' multiple onchange='photos(this)'><div class='photo'></div>";
+else s.innerHTML+="<textarea placeholder='Hier aufnehmen …'></textarea>";box.appendChild(s)});show("project")}
+function photos(i){let b=i.nextElementSibling;b.innerHTML="";[...i.files].forEach(f=>{let im=document.createElement("img");im.src=URL.createObjectURL(f);b.appendChild(im)})}
+</script></body></html>
