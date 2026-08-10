@@ -1,43 +1,71 @@
 <!doctype html>
-<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f7f8">
 <title>TechPilot</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f6f8;color:#17202a}
-header{background:white;padding:22px 18px 16px;position:sticky;top:0;border-bottom:1px solid #ddd}main{max-width:760px;margin:auto;padding:18px 16px 90px}
-h1{margin:0;font-size:28px}h2{font-size:21px}.sub,.small{color:#6b7280;font-size:14px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.card,.step{background:white;border-radius:18px;padding:18px;border:1px solid #e5e7eb;box-shadow:0 2px 10px #0000000a}
-.card strong{display:block;font-size:18px;margin-bottom:5px}.icon{font-size:28px;margin-bottom:8px}
-button{border:0;border-radius:13px;padding:13px 16px;font-size:16px;font-weight:600;background:#1f2937;color:white}.green{background:#1f9d55}.back{background:transparent;color:#374151;padding:4px 0}
-.hidden{display:none}.step{margin:10px 0}label{display:block;font-weight:600;margin:13px 0 6px}
-input,select,textarea{width:100%;padding:13px;border:1px solid #d5dbe1;border-radius:11px;font:inherit;background:white}textarea{min-height:90px}
-.pill{display:inline-block;background:#e9f7ef;color:#147a3e;border-radius:20px;padding:6px 10px;font-size:13px;font-weight:700}
-nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #ddd;display:flex}nav button{background:transparent;color:#4b5563;border-radius:0;flex:1;font-size:13px}
-.photo{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}.photo img{width:86px;height:86px;object-fit:cover;border-radius:10px}
-</style></head><body>
-<header><h1>TechPilot</h1><div class="sub">Digitale Baustellenaufnahme für HKLS-, Elektro- und PV-Techniker</div></header>
+*{box-sizing:border-box}body{margin:0;background:#f5f7f8;color:#18212b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:#fff;padding:22px 18px 16px;border-bottom:1px solid #dfe5e9}h1{margin:0;font-size:28px}h2{margin:0 0 6px;font-size:22px}h3{margin:0 0 8px;font-size:18px}.sub{color:#66717d;font-size:14px}
+main{max-width:720px;margin:auto;padding:16px 14px 90px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card,.step{background:#fff;border:1px solid #dfe5e9;border-radius:18px;padding:17px;box-shadow:0 2px 8px #00000008}.card{min-height:125px;cursor:pointer}.card .icon{font-size:30px;margin-bottom:10px}.card strong{display:block;font-size:18px}.card span{font-size:13px;color:#66717d}
+.hidden{display:none!important}button{font:inherit;border:0;border-radius:14px;padding:13px 16px;cursor:pointer}.primary{background:#22a447;color:#fff;font-weight:700}.secondary{background:#eef1f3;color:#18212b}.back{background:transparent;padding:5px 0;color:#66717d;margin-bottom:10px}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice{background:#f4f6f7;border:2px solid transparent;text-align:left;min-height:54px}.choice.selected{border-color:#22a447;background:#e9f7ee}
+label{display:block;font-size:13px;color:#66717d;margin:13px 0 6px}input,select,textarea{width:100%;padding:13px;border:1px solid #dfe5e9;border-radius:12px;background:#fff;font:inherit;color:#18212b}textarea{min-height:90px;resize:vertical}
+.counter{display:flex;align-items:center;justify-content:space-between;background:#f4f6f7;border-radius:14px;padding:8px}.counter button{width:46px;height:44px;padding:0;font-size:24px;background:#fff;border:1px solid #dfe5e9}.counter strong{font-size:20px}
+.device{border-top:1px solid #dfe5e9;padding-top:14px;margin-top:14px}.photo-btn{background:#eef1f3}.summary{background:#e9f7ee;border:1px solid #cbe9d4}.check{color:#22a447;font-weight:800}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dfe5e9;padding:10px 14px}.bottom-inner{max-width:720px;margin:auto;display:flex;gap:10px}.bottom button{flex:1}
+</style>
+</head>
+<body>
+<header><h1>TechPilot</h1><div class="sub">Digitale Baustellenaufnahme für HKLS-, Elektro- und PV-Techniker.</div></header>
 <main>
-<section id="home"><h2>Guten Tag 👋</h2><p class="sub">Was möchtest du heute aufnehmen?</p>
+<section id="home">
+<div class="step"><h2>Guten Tag 👋</h2><div class="sub">Welches Projekt nehmen wir heute auf?</div></div>
 <div class="grid">
-<div class="card" onclick="start('heizung')"><div class="icon">🔥</div><strong>Heizung</strong><span class="small">Sanierung · Wärmepumpe · Neubau</span></div>
-<div class="card" onclick="start('sanitaer')"><div class="icon">🚿</div><strong>Sanitär</strong><span class="small">Wasserleitung · Bad · Neubau</span></div>
-<div class="card" onclick="start('klima')"><div class="icon">❄️</div><strong>Klima</strong><span class="small">Single Split · Multi Split</span></div>
-<div class="card" onclick="start('pv')"><div class="icon">☀️</div><strong>PV</strong><span class="small">Anlage · Speicher · Wallbox</span></div>
+<div class="card" onclick="openProject('heizung')"><div class="icon">🔥</div><strong>Heizung</strong><span>Sanierung, Kessel, Wärmepumpe …</span></div>
+<div class="card" onclick="openProject('sanitaer')"><div class="icon">🚿</div><strong>Sanitär</strong><span>Leitungen, Bad, WC …</span></div>
+<div class="card" onclick="openProject('klima')"><div class="icon">❄️</div><strong>Klima</strong><span>Single Split, Multi Split …</span></div>
+<div class="card" onclick="openProject('pv')"><div class="icon">☀️</div><strong>PV</strong><span>Anlage, Speicher, Wallbox …</span></div>
+<div class="card" onclick="openProject('neubau')"><div class="icon">🏠</div><strong>Neubau</strong><span>Erstaufnahme Neubauprojekt</span></div>
 </div></section>
-<section id="project" class="hidden"><button class="back" onclick="show('home')">← Zurück</button><h2 id="title"></h2><span class="pill">Besichtigung läuft</span><div id="steps"></div>
-<button class="green" onclick="alert('✓ Besichtigung abgeschlossen')">✓ Besichtigung abschließen</button></section>
+<section id="project" class="hidden"><button class="back" onclick="showHome()">← Zurück zur Projektübersicht</button><div id="projectContent"></div></section>
 </main>
-<nav><button onclick="show('home')">⌂<br>Startseite</button><button onclick="show('home')">＋<br>Neues Projekt</button><button onclick="alert('Dashboard kommt als nächster Schritt.')">▣<br>Projekte</button></nav>
+<div class="bottom"><div class="bottom-inner"><button class="secondary" onclick="showHome()">⌂ Startseite</button><button class="primary" onclick="finishVisit()">✓ Besichtigung abschließen</button></div></div>
 <script>
-const D={
-heizung:["Heizung – Baustellenaufnahme","Auftrag / Kundenwunsch","Heizraum: Kessel / Wärmeerzeuger","Hydraulik: Mischer, direkte Heizkreise, FBH, Heizkörper","Wärmeabgabe: Heizkörper ausreichend?","Puffer / Boiler / Hygiene-Puffer","Regelung / Raumgeräte","Kamin: Durchmesser, Höhe, Zustand, Anschlusshöhe","Außeneinheit / Leitungsweg","Fotos"],
-sanitaer:["Sanitär – Baustellenaufnahme","Auftrag: Wasserleitung, Bad, WC oder Neubau","Leitungen: Meter, Aufputz / Unterputz, Material","Zählergarnitur, Druckminderer, Filter","Bad: Dusche, Badewanne, Waschbecken, WC, Lüfter, Badheizkörper, Waschmaschine","Armaturen: Unterputz / Waschtisch / Farbe","FBH: Rücklauftemperaturbegrenzung / Oventrop Multiblock","Ausstattungskatalog / Wünsche"],
-klima:["Klima – Baustellenaufnahme","Single Split oder Multi Split","Anzahl Geräte / Räume / Leistung","Gerätetyp: Wandgerät oder Deckengerät","Hersteller: Daikin / Samsung / Panasonic / Sinclair / Andere","Montage: Kabelkanal / Unterputz / Spitzboden","Kondensat: Pumpe / fallende Leitung / Waschbecken / Behälter","Außengerät: Standort / Befestigung","Strom: Zuleitung / Sicherung / Zählerkasten / Foto"],
-pv:["PV – Baustellenaufnahme","Wunsch: Anlage / Speicher / Notstrom / Wallbox","Größe / Dachfläche / Ausrichtung","Dach: Bieberschwanz / Bramac / Eternit / Blechfalz / Flachdach","Befestigung: z.B. Schweizer Befestigung","Leitungsweg Dach → Wechselrichter","Wechselrichter: Montageort","Zählerkasten: Standort / Platz / Foto"]
-};
-function show(id){document.querySelectorAll("main section").forEach(x=>x.classList.add("hidden"));document.getElementById(id).classList.remove("hidden")}
-function start(type){let d=D[type],box=document.getElementById("steps");document.getElementById("title").textContent=d[0];box.innerHTML="";
-d.slice(1).forEach((x,i)=>{let s=document.createElement("div");s.className="step";s.innerHTML="<strong>"+(i+1)+". "+x+"</strong>";
-if(x=="Fotos")s.innerHTML+="<input type='file' accept='image/*' multiple onchange='photos(this)'><div class='photo'></div>";
-else s.innerHTML+="<textarea placeholder='Hier aufnehmen …'></textarea>";box.appendChild(s)});show("project")}
-function photos(i){let b=i.nextElementSibling;b.innerHTML="";[...i.files].forEach(f=>{let im=document.createElement("img");im.src=URL.createObjectURL(f);b.appendChild(im)})}
-</script></body></html>
+const state={anlagenart:"",anzahl:1,devices:[]};
+function showHome(){home.classList.remove("hidden");project.classList.add("hidden")}
+function openProject(t){home.classList.add("hidden");project.classList.remove("hidden");if(t==="klima"){state.anlagenart="";state.anzahl=1;state.devices=[];renderKlima()}else{projectContent.innerHTML='<div class="step"><h2>'+({heizung:"Heizung",sanitaer:"Sanitär",pv:"PV",neubau:"Neubau"}[t])+'</h2><div class="sub">Diesen Bereich bauen wir als Nächstes mit derselben schnellen Auswahl-Logik aus.</div><label>Notiz / Besonderheiten</label><textarea placeholder="Kurze Notizen …"></textarea></div>'}}
+function selectAnlage(v,el){state.anlagenart=v;if(v==="Single Split")state.anzahl=1;renderKlima()}
+function changeCount(d){state.anzahl=Math.max(1,Math.min(8,state.anzahl+d));if(state.anlagenart==="Single Split")state.anzahl=1;while(state.devices.length<state.anzahl)state.devices.push({});renderKlima()}
+function save(i,k,v){if(!state.devices[i])state.devices[i]={};state.devices[i][k]=v}
+function choice(i,k,v){save(i,k,v);renderKlima()}
+function renderKlima(){
+let dev="";
+for(let i=0;i<state.anzahl;i++){let d=state.devices[i]||{};dev+=`
+<div class="device"><h3>Gerät ${i+1}</h3>
+<label>Raum / Position</label><input value="${d.raum||""}" oninput="save(${i},'raum',this.value)" placeholder="z. B. Wohnzimmer">
+<label>Gerätetyp</label><div class="choice-grid">
+<button class="choice ${d.typ==='Wandgerät'?'selected':''}" onclick="choice(${i},'typ','Wandgerät')">Wandgerät</button>
+<button class="choice ${d.typ==='Deckengerät'?'selected':''}" onclick="choice(${i},'typ','Deckengerät')">Deckengerät</button></div>
+<label>Leistung</label><select onchange="save(${i},'leistung',this.value)"><option value="">Bitte auswählen</option>${["2,0 kW","2,5 kW","3,5 kW","5,0 kW","6,0 kW","7,0 kW"].map(x=>`<option ${d.leistung===x?"selected":""}>${x}</option>`).join("")}</select>
+<label>Kondensat</label><div class="choice-grid">
+<button class="choice ${d.kondensat==='Fallende Leitung'?'selected':''}" onclick="choice(${i},'kondensat','Fallende Leitung')">Fallende Leitung</button>
+<button class="choice ${d.kondensat==='Kondensatpumpe'?'selected':''}" onclick="choice(${i},'kondensat','Kondensatpumpe')">Kondensatpumpe</button>
+<button class="choice ${d.kondensat==='Behälter / Notlösung'?'selected':''}" onclick="choice(${i},'kondensat','Behälter / Notlösung')">Behälter / Notlösung</button></div>
+<label>Notiz / Besonderheiten</label><textarea oninput="save(${i},'notiz',this.value)" placeholder="Leitungsweg, Anschlusshöhe …">${d.notiz||""}</textarea>
+<label>Fotos</label><button class="photo-btn" onclick="alert('Kamera-Anbindung kommt im nächsten Schritt.')">📷 Foto hinzufügen</button></div>`}
+projectContent.innerHTML=`
+<div class="step"><h2>Klima – Baustellenaufnahme</h2><div class="sub">So wenig tippen wie möglich.</div></div>
+<div class="step"><h3>1. Anlagenart</h3><div class="choice-grid">
+<button class="choice ${state.anlagenart==='Single Split'?'selected':''}" onclick="selectAnlage('Single Split',this)">Single Split</button>
+<button class="choice ${state.anlagenart==='Multi Split'?'selected':''}" onclick="selectAnlage('Multi Split',this)">Multi Split</button></div></div>
+${state.anlagenart?`<div class="step"><h3>2. Geräteanzahl</h3><div class="counter"><button onclick="changeCount(-1)">−</button><strong>${state.anzahl}</strong><button onclick="changeCount(1)">+</button></div></div>
+<div class="step"><h3>3. Geräte</h3>${dev}</div>
+<div class="step"><h3>4. Außengerät</h3><label>Aufstellort</label><input placeholder="Terrasse, Fassade, Balkon …"><label>Leitungsweg / Kabelkanal</label><textarea placeholder="Kurze Beschreibung …"></textarea><label>Stromversorgung</label><textarea placeholder="Zuleitung vom Zählerkasten, Platz für Sicherung …"></textarea></div>
+<div class="step summary"><h3><span class="check">✓</span> Kurz-Zusammenfassung</h3><p><b>Anlage:</b> ${state.anlagenart}</p><p><b>Innengeräte:</b> ${state.anzahl}</p></div>`:""}`}
+function finishVisit(){alert("✓ Besichtigung abgeschlossen")}
+</script>
+</body>
+</html>
