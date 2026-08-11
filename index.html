@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#f5f7f8">
-<title>TechPilot</title>
+<title>TechPilot – Sanitär Test v2</title>
 <style>
 *{box-sizing:border-box}body{margin:0;background:#f5f7f8;color:#18212b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
 header{background:#fff;padding:22px 18px 16px;border-bottom:1px solid #dfe5e9}h1{margin:0;font-size:28px}h2{margin:0 0 6px;font-size:22px}h3{margin:0 0 8px;font-size:18px}.sub{color:#66717d;font-size:14px}
@@ -24,26 +24,73 @@ label{display:block;font-size:13px;color:#66717d;margin:13px 0 6px}input,select,
 <header><h1>TechPilot</h1><div class="sub">Digitale Baustellenaufnahme für HKLS-, Elektro- und PV-Techniker.</div></header>
 <main>
 <section id="home">
-<div class="step"><h2>Guten Tag 👋</h2><div class="sub">Welches Projekt nehmen wir heute auf?</div></div>
-<div class="grid">
-<div class="card" onclick="openProject('heizung')"><div class="icon">🔥</div><strong>Heizung</strong><span>Sanierung, Kessel, Wärmepumpe …</span></div>
-<div class="card" onclick="openProject('sanitaer')"><div class="icon">🚿</div><strong>Sanitär</strong><span>Leitungen, Bad, WC …</span></div>
-<div class="card" onclick="openProject('klima')"><div class="icon">❄️</div><strong>Klima</strong><span>Single Split, Multi Split …</span></div>
-<div class="card" onclick="openProject('pv')"><div class="icon">☀️</div><strong>PV</strong><span>Anlage, Speicher, Wallbox …</span></div>
-<div class="card" onclick="openProject('neubau')"><div class="icon">🏠</div><strong>Neubau</strong><span>Erstaufnahme Neubauprojekt</span></div>
-</div></section>
+<div class="step"><h2>Guten Tag 👋</h2><div class="sub">Projekte anlegen, öffnen und Besichtigungen fortsetzen.</div></div>
+<div class="step"><button class="primary" style="width:100%" onclick="newProject()">＋ Neues Projekt</button></div>
+<div id="projectList"></div>
+</section>
+<section id="create" class="hidden">
+<button class="back" onclick="showHome()">← Zurück</button>
+<div class="step"><h2>Neues Projekt</h2><div class="sub">Nur die wichtigsten Angaben am Anfang.</div></div>
+<div class="step">
+<h3>1. Kunde</h3>
+<label>Name / Firma</label><input id="cname" placeholder="z. B. Max Mustermann">
+<label>Telefon (optional)</label><input id="cphone" type="tel" placeholder="Telefonnummer">
+<label>E-Mail (optional)</label><input id="cemail" type="email" placeholder="E-Mail-Adresse">
+</div>
+<div class="step">
+<h3>2. Projekt</h3>
+<label>Projektbezeichnung</label><input id="pname" placeholder="z. B. Heizungssanierung">
+<label>Adresse / Baustelle</label><input id="paddress" placeholder="Straße, Ort">
+<label>Projektart</label>
+<div class="choice-grid">
+<button class="choice" onclick="chooseType(this,'Heizung')">🔥 Heizung</button>
+<button class="choice" onclick="chooseType(this,'Sanitär')">🚿 Sanitär</button>
+<button class="choice" onclick="chooseType(this,'Klima')">❄️ Klima</button>
+<button class="choice" onclick="chooseType(this,'PV')">☀️ PV</button>
+<button class="choice" onclick="chooseType(this,'Neubau')">🏠 Neubau</button>
+</div>
+</div>
+<div class="step"><button class="primary" style="width:100%" onclick="createProject()">✓ Projekt anlegen & Besichtigung starten</button></div>
+</section>
 <section id="project" class="hidden"><button class="back" onclick="showHome()">← Zurück zur Projektübersicht</button><div id="projectContent"></div></section>
 </main>
 <div class="bottom"><div class="bottom-inner"><button class="secondary" onclick="showHome()">⌂ Startseite</button><button class="primary" onclick="finishVisit()">✓ Besichtigung abschließen</button></div></div>
 
 <script>
-const state={anlagenart:"",aussen:1,innen:1,devices:[]};
+const state={anlagenart:"",aussen:1,innen:1,devices:[],customer:{},project:{},projects:[]};
+try{state.projects=JSON.parse(localStorage.getItem("techpilot_projects")||"[]")}catch(e){state.projects=[]}
 
-function showHome(){home.classList.remove("hidden");project.classList.add("hidden")}
+function showHome(){home.classList.remove("hidden");create.classList.add("hidden");project.classList.add("hidden");renderProjects()}
+function saveProjects(){localStorage.setItem("techpilot_projects",JSON.stringify(state.projects))}
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function renderProjects(){
+ const b=document.getElementById("projectList");
+ if(!state.projects.length){b.innerHTML='<div class="step"><h3>Noch keine Projekte</h3><div class="sub">Lege dein erstes Projekt an.</div></div>';return}
+ b.innerHTML='<div class="step"><h3>Meine Projekte</h3></div>'+state.projects.map((p,i)=>`<div class="step" onclick="openSaved(${i})" style="cursor:pointer"><div style="display:flex;justify-content:space-between;gap:8px"><div><b>${esc(p.customerName||"Ohne Kundennamen")}</b><div class="sub">${esc(p.name||"Ohne Projektbezeichnung")}</div><div class="sub">${esc(p.address||"")}</div></div><span class="pill">${esc(p.type)}</span></div><div class="sub" style="margin-top:9px">${p.status==="completed"?"🟢 Besichtigung abgeschlossen":"🟡 Besichtigung offen"}</div></div>`).join("")
+}
+function newProject(){
+ document.getElementById("home").classList.add("hidden");document.getElementById("project").classList.add("hidden");document.getElementById("create").classList.remove("hidden");
+ document.querySelectorAll("#create input").forEach(x=>x.value="");document.querySelectorAll("#create .choice").forEach(x=>x.classList.remove("selected"));state.project.type=""
+}
+function chooseType(el,type){state.project.type=type;el.parentElement.querySelectorAll(".choice").forEach(x=>x.classList.remove("selected"));el.classList.add("selected")}
+function createProject(){
+ const p={id:Date.now(),customerName:document.getElementById("cname").value.trim(),phone:document.getElementById("cphone").value.trim(),email:document.getElementById("cemail").value.trim(),name:document.getElementById("pname").value.trim(),address:document.getElementById("paddress").value.trim(),type:state.project.type||"Projekt",status:"open"};
+ if(!p.customerName&&!p.name){alert("Bitte Kunde oder Projektbezeichnung eingeben.");return}
+ state.projects.unshift(p);saveProjects();openSaved(0)
+}
+function openSaved(i){
+ const p=state.projects[i];state.customer={name:p.customerName,phone:p.phone,email:p.email};state.project={...p};
+ document.getElementById("home").classList.add("hidden");document.getElementById("create").classList.add("hidden");document.getElementById("project").classList.remove("hidden");
+ if(p.type==="Klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];renderKlima()}
+ else if(p.type==="Heizung")renderHeizung();else if(p.type==="Sanitär")renderSanitaer();else renderSimpleSaved(p)
+}
+function renderSimpleSaved(p){projectContent.innerHTML=`<div class="step"><h2>${esc(p.type)}</h2><div class="sub"><b>${esc(p.customerName)}</b> · ${esc(p.name)}</div><div class="sub">${esc(p.address)}</div></div><div class="step"><label>Notiz / Besonderheiten</label><textarea placeholder="Kurze Notizen …"></textarea></div>`}
+function completeProject(){if(state.project.id){let i=state.projects.findIndex(x=>x.id===state.project.id);if(i>=0){state.projects[i].status="completed";saveProjects()}}}
 function openProject(t){
  home.classList.add("hidden");project.classList.remove("hidden");
  if(t==="klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];renderKlima()}
  else if(t==="heizung"){renderHeizung()}
+ else if(t==="sanitaer"){renderSanitaer()}
  else projectContent.innerHTML='<div class="step"><h2>'+({heizung:"Heizung",sanitaer:"Sanitär",pv:"PV",neubau:"Neubau"}[t])+'</h2><div class="sub">Diesen Bereich bauen wir als Nächstes mit derselben schnellen Auswahl-Logik aus.</div><label>Notiz / Besonderheiten</label><textarea placeholder="Kurze Notizen …"></textarea></div>';
 }
 function selectAnlage(v){state.anlagenart=v;if(v==="Single Split"){state.aussen=1;state.innen=1}renderKlima()}
@@ -239,7 +286,128 @@ function heatCount(d){
  e.textContent=n;
 }
 
-function finishVisit(){alert("✓ Besichtigung abgeschlossen")}
+
+function renderSanitaer(){
+ projectContent.innerHTML=`
+ <div class="step"><h2>Sanitär – Baustellenaufnahme</h2><div class="sub"><b>${esc(state.customer.name||"")}</b> · ${esc(state.project.name||"")}</div><div class="sub">${esc(state.project.address||"")}</div></div>
+ <div class="step"><h3>1. Was soll gemacht werden?</h3><div class="choice-grid">
+ <button class="choice" onclick="selectSan('leitung',this)">🚰 Wasserleitung austauschen</button>
+ <button class="choice" onclick="selectSan('bad',this)">🚿 Bad sanieren</button>
+ <button class="choice" onclick="selectSan('wc',this)">🚽 WC sanieren</button>
+ <button class="choice" onclick="selectSan('badwc',this)">🚿🚽 Bad + WC sanieren</button>
+ </div></div><div id="sanDetails"></div>`;
+}
+function selectSan(type,el){
+ document.querySelectorAll('#projectContent .choice').forEach(b=>b.classList.remove('selected')); el.classList.add('selected');
+ document.getElementById('sanDetails').innerHTML = type==='leitung' ? wasserBlock() : badBlock(type);
+}
+function btn(text){return '<button class="choice" type="button">'+text+'</button>'}
+function wasserBlock(){return `
+<div class="step"><h3>2. Leitung</h3><div class="choice-grid">${btn('Kaltwasser')}${btn('Warmwasser')}${btn('Kalt + Warmwasser')}</div>
+<label>Leitungslänge</label><input type="number" min="0" step="0.5" placeholder="ca. Meter"></div>
+<div class="step"><h3>3. Verlegung & Material</h3><div class="choice-grid">${btn('Aufputz')}${btn('Unterputz')}</div>
+<label>Rohrmaterial</label><div class="choice-grid">${btn('Verzinkt')}${btn('Kupfer')}${btn('Kunststoff')}${btn('Mehrschichtverbundrohr')}${btn('Stahlrohr')}</div></div>
+<div class="step"><h3>4. Absperrungen & Hausanschluss</h3><label>Anzahl Absperrungen</label><div class="counter"><button onclick="countUp(this,-1)">−</button><strong>1</strong><button onclick="countUp(this,1)">+</button></div>
+<label>Zählergarnitur</label><div class="choice-grid">${btn('bleibt')}${btn('wird getauscht')}${btn('prüfen')}</div>
+<label>Druckminderer</label><div class="choice-grid">${btn('bleibt')}${btn('wird getauscht')}${btn('prüfen')}</div>
+<label>Filter</label><div class="choice-grid">${btn('bleibt')}${btn('wird getauscht')}${btn('prüfen')}</div></div>
+<div class="step"><h3>5. Warmwasser</h3><div class="choice-grid">${btn('kein Speicher')}${btn('Warmwasserspeicher')}${btn('Hygiene-Puffer')}</div><label>Volumen / Type</label><input placeholder="z. B. 300 l / Hersteller"><label>Foto</label><input type="file" accept="image/*" capture="environment" multiple></div>
+<div class="step"><h3>6. Fotos & Notizen</h3><label>Fotos Leitungswege</label><input type="file" accept="image/*" capture="environment" multiple><label>Besonderheiten</label><textarea placeholder="Durchbrüche, Schächte, Wandaufbau …"></textarea></div>
+<div class="step summary"><h3><span class="check">✓</span> Kurz-Zusammenfassung</h3><p>Leitung → Verlegung → Material → Absperrungen → Zählergarnitur → Druckminderer → Filter → Warmwasser.</p></div>`}
+function badBlock(type){return `
+<div class="step"><h3>2. Ausstattung</h3><div class="choice-grid">${btn('🚿 Dusche')}${btn('🛁 Badewanne')}${btn('🚽 WC')}${btn('🚰 1 Waschbecken')}${btn('🚰🚰 2 Waschbecken')}${btn('🧺 Waschmaschine')}${btn('🔥 Badheizkörper')}${btn('💨 Lüfter')}</div><div class="note">Mehrere Punkte können ausgewählt werden.</div></div>
+<div class="step"><h3>3. Dusche / Badewanne</h3><label>Dusche</label><div class="choice-grid">${btn('bodengleich')}${btn('Duschwanne')}${btn('keine Dusche')}</div><label>Badewanne</label><div class="choice-grid">${btn('freistehend')}${btn('Einbauwanne')}${btn('keine Badewanne')}</div></div>
+<div class="step"><h3>4. Armaturen</h3><div class="choice-grid">${btn('Aufputz')}${btn('Unterputz')}${btn('iBox / Unterputzkörper')}</div><label>Farbe</label><div class="choice-grid">${btn('Chrom')}${btn('Schwarz')}${btn('Weiß')}${btn('Sonstige')}</div><label>Hersteller / Serie</label><input placeholder="z. B. Hansgrohe …"></div>
+<div class="step"><h3>5. Waschtisch</h3><div class="choice-grid">${btn('wandhängend')}${btn('aufgesetzt')}${btn('Möbelwaschtisch')}${btn('Sonstige')}</div><label>Breite / Maße</label><input placeholder="z. B. 80 cm"></div>
+<div class="step"><h3>6. Heizung im Bad</h3><div class="choice-grid">${btn('Badheizkörper')}${btn('Fußbodenheizung')}${btn('Badheizkörper + FBH')}${btn('keine Änderung')}</div><label>FBH-Regelung</label><div class="choice-grid">${btn('Rücklauftemperaturbegrenzung')}${btn('Oventrop Multiblock')}${btn('prüfen')}</div></div>
+<div class="step"><h3>7. Weitere Punkte</h3><label>Waschmaschine</label><div class="choice-grid">${btn('bleibt')}${btn('neu')}${btn('entfällt')}</div><label>Lüfter</label><div class="choice-grid">${btn('vorhanden / bleibt')}${btn('neu')}${btn('nicht vorhanden')}</div><label>Ausstattungskatalog</label><div class="choice-grid">${btn('gewünscht')}${btn('nicht nötig')}</div></div>
+<div class="step"><h3>8. Fotos & Notizen</h3><input type="file" accept="image/*" capture="environment" multiple><label>Besonderheiten</label><textarea placeholder="Anschlüsse, Nischen, Maße, Kundenwünsche …"></textarea></div>
+<div class="step summary"><h3><span class="check">✓</span> Kurz-Zusammenfassung</h3><p>Sanitär-Ausstattung → Armaturen → Waschtisch → Badheizung → weitere Punkte → Fotos & Notizen.</p></div>`}
+function countUp(btn,d){const s=btn.parentElement.querySelector('strong');s.textContent=Math.max(0,parseInt(s.textContent)+d)}
+
+function finishVisit(){completeProject();alert("✓ Besichtigung abgeschlossen\n\nDas Projekt wurde gespeichert.");showHome()}
+renderProjects();
+</script>
+
+<script>
+function addSanitaerV2Panel(){
+  const pc=document.getElementById("projectContent");
+  if(!pc || document.getElementById("sanV2Panel")) return;
+  const panel=document.createElement("div");
+  panel.id="sanV2Panel";
+  panel.className="step";
+  panel.innerHTML=`
+    <h3>🧪 Sanitär v2 – Schnelltest</h3>
+    <div class="sub">Diese Ergänzungen testen wir jetzt: Rohrdimensionen, Foto am Leitungsverlauf, bedingte Ausstattung und Skizze.</div>
+    <h4>Rohrdimensionen</h4>
+    <div id="sanV2Pipes">
+      <div class="pipe-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <select><option>1/2"</option><option>3/4"</option><option>1"</option><option>1 1/4"</option><option>1 1/2"</option></select>
+        <input type="number" min="0" step="0.5" placeholder="Meter">
+      </div>
+    </div>
+    <button class="secondary" onclick="sanV2AddPipe()">＋ weitere Dimension</button>
+    <label>📷 Foto Leitungsverlauf</label>
+    <input type="file" accept="image/*" capture="environment" multiple>
+    <h4 style="margin-top:18px">Ausstattung – nur Ausgewähltes anzeigen</h4>
+    <div class="choice-grid">
+      <button class="choice" onclick="sanV2Toggle(this,'dusche')">🚿 Dusche</button>
+      <button class="choice" onclick="sanV2Toggle(this,'wanne')">🛁 Badewanne</button>
+      <button class="choice" onclick="sanV2Toggle(this,'wc')">🚽 WC</button>
+      <button class="choice" onclick="sanV2Toggle(this,'wasch')">🚰 Waschbecken</button>
+      <button class="choice" onclick="sanV2Toggle(this,'bidet')">🚻 Bidet</button>
+      <button class="choice" onclick="sanV2Toggle(this,'urinal')">🚻 Urinal</button>
+      <button class="choice" onclick="sanV2Toggle(this,'wm')">🧺 Waschmaschine</button>
+    </div>
+    <div id="sanV2Details"></div>
+    <button class="primary" style="margin-top:12px" onclick="openSanV2Sketch()">✏️ Skizze für Bad / WC hinzufügen</button>
+  `;
+  pc.appendChild(panel);
+}
+function sanV2AddPipe(){
+  const b=document.getElementById("sanV2Pipes");
+  const d=document.createElement("div");
+  d.className="pipe-row";
+  d.style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px";
+  d.innerHTML='<select><option>1/2"</option><option>3/4"</option><option>1"</option><option>1 1/4"</option><option>1 1/2"</option></select><input type="number" min="0" step="0.5" placeholder="Meter">';
+  b.appendChild(d);
+}
+function sanV2Toggle(btn,key){
+  btn.classList.toggle("selected");
+  const active=[...document.querySelectorAll("#sanV2Panel .choice.selected")].map(x=>x.getAttribute("onclick").match(/'([^']+)'/)[1]);
+  const d=document.getElementById("sanV2Details");
+  let h="";
+  if(active.includes("dusche")) h+='<div class="step"><b>🚿 Dusche</b><div class="choice-grid"><button class="choice">Duschtasse</button><button class="choice">Bodengleich</button><button class="choice">Duschrinne</button></div></div>';
+  if(active.includes("wanne")) h+='<div class="step"><b>🛁 Badewanne</b><div class="choice-grid"><button class="choice">Einbauwanne</button><button class="choice">Freistehend</button></div></div>';
+  if(active.includes("wc")) h+='<div class="step"><b>🚽 WC</b><div class="choice-grid"><button class="choice" onclick="sanV2WC(this)">Stand-WC</button><button class="choice">Wand-WC</button></div><div id="sanV2WC"></div></div>';
+  if(active.includes("wasch")) h+='<div class="step"><b>🚰 Waschbecken</b><div class="choice-grid"><button class="choice">1 Waschbecken</button><button class="choice">2 Waschbecken</button></div></div>';
+  if(active.includes("bidet")) h+='<div class="step"><b>🚻 Bidet</b><div class="choice-grid"><button class="choice">Stand-Bidet</button><button class="choice">Wand-Bidet</button></div></div>';
+  if(active.includes("urinal")) h+='<div class="step"><b>🚻 Urinal</b><div class="choice-grid"><button class="choice">Aufputz-Spülung</button><button class="choice">Unterputz-Spülung</button></div></div>';
+  if(active.includes("wm")) h+='<div class="step"><b>🧺 Waschmaschine</b><div class="choice-grid"><button class="choice">bleibt</button><button class="choice">neu</button></div></div>';
+  d.innerHTML=h;
+}
+function sanV2WC(btn){
+  const box=btn.parentElement.parentElement.querySelector("#sanV2WC");
+  if(!box)return;
+  box.innerHTML='<div class="choice-grid" style="margin-top:8px"><button class="choice">⬇️ Abgang nach unten</button><button class="choice">⬅️ Abgang nach hinten</button></div>';
+}
+function openSanV2Sketch(){
+  const m=document.createElement("div");
+  m.style="position:fixed;inset:0;background:#fff;z-index:99999;padding:10px;display:flex;flex-direction:column";
+  m.innerHTML='<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>✏️ Bad / WC Skizze</b><button onclick="sanSketchColor(\\'#111\\')">⬛</button><button onclick="sanSketchColor(\\'#d22\\')">🟥</button><button onclick="sanSketchColor(\\'#1677d2\\')">🟦</button><button onclick="sanSketchColor(\\'#198754\\')">🟩</button><button onclick="sanSketchErase()">🧽</button><button onclick="sanSketchClear()">🗑️</button><button onclick="this.closest(\\'div[style*=fixed]\\').remove()">✓ Fertig</button></div><canvas id="sanSketchCanvas" style="flex:1;margin-top:8px;border:1px solid #ccc;background-image:linear-gradient(#d9e1e8 1px,transparent 1px),linear-gradient(90deg,#d9e1e8 1px,transparent 1px);background-size:20px 20px;touch-action:none"></canvas>';
+  document.body.appendChild(m);
+  const c=document.getElementById("sanSketchCanvas"),ctx=c.getContext("2d");
+  c.width=innerWidth-20;c.height=innerHeight-75;
+  window._sanSketch={ctx,color:"#111",size:3,down:false};
+  c.onpointerdown=e=>{window._sanSketch.down=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY)};
+  c.onpointermove=e=>{if(!window._sanSketch.down)return;ctx.strokeStyle=window._sanSketch.color;ctx.lineWidth=window._sanSketch.size;ctx.lineCap="round";ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY)};
+  c.onpointerup=()=>window._sanSketch.down=false;
+  c.onpointercancel=()=>window._sanSketch.down=false;
+}
+function sanSketchColor(c){window._sanSketch.color=c;window._sanSketch.size=3}
+function sanSketchErase(){window._sanSketch.color="#fff";window._sanSketch.size=18}
+function sanSketchClear(){const c=document.getElementById("sanSketchCanvas");c.getContext("2d").clearRect(0,0,c.width,c.height)}
+document.addEventListener("DOMContentLoaded",()=>setTimeout(addSanitaerV2Panel,250));
 </script>
 </body>
 </html>
