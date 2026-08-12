@@ -118,6 +118,7 @@ function openSaved(i){
   state.devices=d.devices||[];
   state.outdoor=d.outdoor||[];
   state.climateSketch=d.climateSketch||"";
+  state.projectPhotos=p.projectPhotos||[];
   renderKlima()
 }
  else if(p.type==="Heizung")renderHeizung();else renderSimpleSaved(p)
@@ -137,7 +138,7 @@ function completeProject(){
 }
 function openProject(t){
  home.classList.add("hidden");project.classList.remove("hidden");
- if(t==="klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];state.climateSketch="";renderKlima()}
+ if(t==="klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];state.climateSketch="";state.projectPhotos=[];renderKlima()}
  else if(t==="heizung"){renderHeizung()}
  else projectContent.innerHTML='<div class="step"><h2>'+({heizung:"Heizung",sanitaer:"Sanitär",pv:"PV",neubau:"Neubau"}[t])+'</h2><div class="sub">Diesen Bereich bauen wir als Nächstes mit derselben schnellen Auswahl-Logik aus.</div><label>Notiz / Besonderheiten</label><textarea placeholder="Kurze Notizen …"></textarea></div>';
 }
@@ -189,7 +190,7 @@ function renderKlima(){
   <label>Kondensat</label>
   <select onchange="save(${i},'kondensat',this.value)"><option value="">Bitte auswählen</option>${["Fallende Leitung","Kondensatpumpe","Anschluss an Abfluss","Behälter / Notlösung"].map(x=>`<option ${d.kondensat===x?"selected":""}>${x}</option>`).join("")}</select>
   <label>Notiz / Besonderheiten</label><textarea oninput="save(${i},'notiz',this.value)" placeholder="Leitungsweg, Anschlusshöhe …">${d.notiz||""}</textarea>
-  <label>Fotos Innengerät / Anschluss</label><input type="file" accept="image/*" capture="environment" multiple onchange="showPhotoNames(this,'photos${i}')"><div id="photos${i}" class="sub" style="margin-top:7px"></div></div>`;
+  <label>Fotos Innengerät / Anschluss</label><input type="file" accept="image/*" capture="environment" multiple onchange="saveProjectFiles(this,'Innengerät ${i+1}')"><div id="photos${i}" class="sub" style="margin-top:7px"></div></div>`;
  }
  let outs="";
  for(let n=0;n<state.aussen;n++){
@@ -198,7 +199,7 @@ function renderKlima(){
   <label>Aufstellort</label><select onchange="saveOutdoor(${n},'ort',this.value)"><option value="">Bitte auswählen</option>${["Terrasse","Balkon","Fassade","Dach","Bodenaufstellung","Carport / Überdachung","Sonstiger Ort"].map(x=>`<option ${a.ort===x?"selected":""}>${x}</option>`).join("")}</select>
   <label>Aufstellung</label><select onchange="saveOutdoor(${n},'aufstellung',this.value)"><option value="">Bitte auswählen</option>${["Boden","Wandkonsole","Dachkonsole","Balkonkonsole","Sonstige"].map(x=>`<option ${a.aufstellung===x?"selected":""}>${x}</option>`).join("")}</select>
   <label>Schall / Nachbarschaft</label><select onchange="saveOutdoor(${n},'schall',this.value)"><option value="">Bitte auswählen</option>${["unproblematisch","prüfen","kritisch"].map(x=>`<option ${a.schall===x?"selected":""}>${x}</option>`).join("")}</select>
-  <label>Foto Außengerät / Aufstellort</label><input type="file" accept="image/*" capture="environment" multiple onchange="showPhotoNames(this,'aussenphotos${n}')"><div id="aussenphotos${n}" class="sub" style="margin-top:7px"></div>
+  <label>Foto Außengerät / Aufstellort</label><input type="file" accept="image/*" capture="environment" multiple onchange="saveProjectFiles(this,'Außengerät ${n+1}')"><div id="aussenphotos${n}" class="sub" style="margin-top:7px"></div>
   <label>Notiz</label><textarea oninput="saveOutdoor(${n},'notiz',this.value)" placeholder="Abstände, Nachbarschaft, Untergrund …">${a.notiz||""}</textarea></div>`;
  }
  const total=state.devices.reduce((sum,d)=>sum+(parseFloat(String(d.laenge||"").replace(",","."))||0),0);
@@ -218,7 +219,7 @@ function renderKlima(){
  <label>Versorgung</label><select><option>Bitte auswählen</option><option>eigener Stromkreis</option><option>bestehender Stromkreis</option><option>prüfen</option></select>
  <label>Absicherung</label><select><option>Bitte auswählen</option><option>10 A</option><option>13 A</option><option>16 A</option><option>20 A</option><option>prüfen</option></select>
  <label>Leitungsweg</label><select><option>Bitte auswählen</option><option>Aufputz</option><option>Unterputz</option><option>Kabelkanal</option><option>über Dachboden</option><option>über Keller</option><option>prüfen</option></select>
- <label>Foto Zählerkasten / Verteiler</label><input type="file" accept="image/*" capture="environment" multiple onchange="showPhotoNames(this,'stromphotos')"><div id="stromphotos" class="sub" style="margin-top:7px"></div></div>
+ <label>Foto Zählerkasten / Verteiler</label><input type="file" accept="image/*" capture="environment" multiple onchange="saveProjectFiles(this,'Zählerkasten / Verteiler')"><div id="stromphotos" class="sub" style="margin-top:7px"></div></div>
  <div class="step"><h3>6. Gemeinsame Leitungswege</h3>
  <label>Besonderheiten Leitungsweg</label><textarea placeholder="Kabelkanal, Durchbrüche, Schächte, über Spitzboden …"></textarea>
  <label>Fotos Leitungswege</label><input type="file" accept="image/*" capture="environment" multiple></div>
@@ -250,8 +251,14 @@ function createKlimaPDFReport(){
  let total=state.devices.reduce((s,d)=>s+(parseFloat(String(d.laenge||"").replace(",","."))||0),0);
  w.document.write(`<html><head><title>TechPilot – Klima Report</title><style>body{font-family:Arial;padding:28px}h1{font-size:24px}h2{margin-top:24px;border-bottom:1px solid #ccc;padding-bottom:6px}.card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0;page-break-inside:avoid}button{padding:10px 14px;border:0;border-radius:8px;background:#111;color:#fff}@media print{button{display:none}}</style></head><body><h1>TechPilot – Klima Besichtigungsreport</h1><div class="card"><b>Kunde:</b> ${esc((state.customer||{}).name||"")}<br><b>Projekt:</b> ${esc((state.project||{}).name||"")}<br><b>Adresse:</b> ${esc((state.project||{}).address||"")}<br><b>Datum:</b> ${new Date().toLocaleDateString("de-DE")}</div><div class="card"><b>Anlage:</b> ${esc(state.anlagenart)}<br><b>Außengeräte:</b> ${state.aussen}<br><b>Innengeräte:</b> ${state.innen}<br><b>Gesamtleitung:</b> ${total.toLocaleString("de-DE",{maximumFractionDigits:1})} m</div>`);
  state.devices.slice(0,state.innen).forEach((d,i)=>w.document.write(`<div class="card"><h2>Innengerät ${i+1}</h2>Raum: ${esc(d.raum||"")}<br>Außengerät: ${esc(d.aussen||"1")}<br>Typ: ${esc(d.typ||"")}<br>Leistung: ${esc(d.leistung||"")}<br>Leitung: ${esc(d.laenge||"")} m<br>Kondensat: ${esc(d.kondensat||"")}<br>Notiz: ${esc(d.notiz||"")}</div>`));
+ if(state.projectPhotos && state.projectPhotos.length){
+   w.document.write('<h2>Fotos</h2>');
+   state.projectPhotos.forEach((p,idx)=>{
+     w.document.write('<div class="card"><b>'+esc(p.category||"Foto")+'</b><br><img src="'+p.data+'" style="max-width:100%;max-height:420px;margin-top:8px;border:1px solid #ccc"></div>');
+   });
+ }
  if(state.climateSketch){
-   w.document.write('<h2>Skizze</h2><div class="card"><img src="'+state.climateSketch+'" style="max-width:100%;max-height:600px;border:1px solid #ccc"></div>');
+   w.document.write('<h2>Skizze</h2><div class="card"><img src="'+state.climateSketch+'" style="max-width:100%;max-height:650px;border:1px solid #ccc"></div>');
  }
  w.document.write('<button onclick="window.print()">🖨️ Drucken / Als PDF speichern</button></body></html>');w.document.close();
 }
@@ -397,14 +404,53 @@ function heatCount(d){
 function persistCurrentProject(){
  if(!state.project.id)return;
  const i=state.projects.findIndex(x=>x.id===state.project.id);
- if(i>=0){
-  state.projects[i].climateData={
+ if(i<0)return;
+ state.projects[i].status=state.projects[i].status||"open";
+ state.projects[i].climateData={
    anlagenart:state.anlagenart,aussen:state.aussen,innen:state.innen,
    devices:state.devices,outdoor:state.outdoor,climateSketch:state.climateSketch||""
-  };
-  saveProjects();
- }
+ };
+ state.projects[i].projectPhotos=state.projectPhotos||[];
+ saveProjects();
 }
+let _persistTimer=null;
+function scheduleProjectSave(){
+ clearTimeout(_persistTimer);
+ _persistTimer=setTimeout(persistCurrentProject,300);
+}
+async function saveProjectFiles(input,category){
+ if(!input || !input.files || !input.files.length || !state.project.id)return;
+ if(!state.projectPhotos)state.projectPhotos=[];
+ for(const file of [...input.files]){
+   if(!file.type.startsWith("image/"))continue;
+   const data=await compressProjectImage(file);
+   state.projectPhotos.push({category:category||"Foto",name:file.name,data});
+ }
+ persistCurrentProject();
+}
+function compressProjectImage(file){
+ return new Promise(resolve=>{
+   const reader=new FileReader();
+   reader.onload=()=>{
+     const img=new Image();
+     img.onload=()=>{
+       const max=1400, scale=Math.min(1,max/Math.max(img.width,img.height));
+       const c=document.createElement("canvas");
+       c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);
+       c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+       resolve(c.toDataURL("image/jpeg",0.72));
+     };
+     img.src=reader.result;
+   };
+   reader.readAsDataURL(file);
+ });
+}
+document.addEventListener("input",e=>{
+ if(e.target.closest("#projectContent"))scheduleProjectSave();
+});
+document.addEventListener("change",e=>{
+ if(e.target.closest("#projectContent") && e.target.type!=="file")scheduleProjectSave();
+});
 function finishVisit(){persistCurrentProject();completeProject();alert("✓ Besichtigung abgeschlossen\n\nDas Projekt wurde gespeichert.");showHome()}
 renderProjects();
 </script>
