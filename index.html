@@ -2,53 +2,328 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>TechPilot – Skizzenmodul Test</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f7f8">
+<title>TechPilot</title>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f6f7;color:#171717}
-header{padding:14px 16px;background:#fff;border-bottom:1px solid #ddd;display:flex;align-items:center;gap:10px}
-header strong{margin-right:auto;font-size:18px}
-.toolbar{padding:10px;background:#fff;border-bottom:1px solid #ddd;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-button{border:0;border-radius:10px;padding:10px 13px;background:#eee;font-size:15px;cursor:pointer}
-button.active{outline:3px solid #bbb}
-.done{background:#171717;color:#fff}
-canvas{display:block;width:calc(100vw - 20px);height:calc(100vh - 125px);margin:10px;border:1px solid #cfd5da;border-radius:8px;background-color:#fff;
-background-image:linear-gradient(#d9e1e8 1px,transparent 1px),linear-gradient(90deg,#d9e1e8 1px,transparent 1px);
-background-size:20px 20px;touch-action:none}
-@media (min-width:800px){canvas{height:calc(100vh - 120px)}}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f8;color:#18212b;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+header{background:#fff;padding:22px 18px 16px;border-bottom:1px solid #dfe5e9}h1{margin:0;font-size:28px}h2{margin:0 0 6px;font-size:22px}h3{margin:0 0 8px;font-size:18px}.sub{color:#66717d;font-size:14px}
+main{max-width:720px;margin:auto;padding:16px 14px 90px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.card,.step{background:#fff;border:1px solid #dfe5e9;border-radius:18px;padding:17px;box-shadow:0 2px 8px #00000008}.card{min-height:125px;cursor:pointer}.card .icon{font-size:30px;margin-bottom:10px}.card strong{display:block;font-size:18px}.card span{font-size:13px;color:#66717d}
+.hidden{display:none!important}button{font:inherit;border:0;border-radius:14px;padding:13px 16px;cursor:pointer}.primary{background:#22a447;color:#fff;font-weight:700}.secondary{background:#eef1f3;color:#18212b}.back{background:transparent;padding:5px 0;color:#66717d;margin-bottom:10px}
+.choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.choice{background:#f4f6f7;border:2px solid transparent;text-align:left;min-height:54px}.choice.selected{border-color:#22a447;background:#e9f7ee}
+label{display:block;font-size:13px;color:#66717d;margin:13px 0 6px}input,select,textarea{width:100%;padding:13px;border:1px solid #dfe5e9;border-radius:12px;background:#fff;font:inherit;color:#18212b}textarea{min-height:90px;resize:vertical}
+.counter{display:flex;align-items:center;justify-content:space-between;background:#f4f6f7;border-radius:14px;padding:8px;margin-bottom:12px}.counter button{width:46px;height:44px;padding:0;font-size:24px;background:#fff;border:1px solid #dfe5e9}.counter strong{font-size:20px}
+.device{border-top:1px solid #dfe5e9;padding-top:14px;margin-top:14px}.photo-btn{background:#eef1f3}.summary{background:#e9f7ee;border:1px solid #cbe9d4}.check{color:#22a447;font-weight:800}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dfe5e9;padding:10px 14px}.bottom-inner{max-width:720px;margin:auto;display:flex;gap:10px}.bottom button{flex:1}
+.note{font-size:13px;color:#66717d;background:#f4f6f7;border-radius:12px;padding:10px;margin-top:10px}
+@media(max-width:420px){.grid,.choice-grid{grid-template-columns:1fr 1fr}main{padding-left:10px;padding-right:10px}}
 </style>
 </head>
 <body>
-<header><strong>✏️ TechPilot – Skizze</strong><span>Testversion</span></header>
-<div class="toolbar">
-<button class="active" onclick="setColor('#111',3,this)">⬛ Schwarz</button>
-<button onclick="setColor('#d22',3,this)">🟥 Rot</button>
-<button onclick="setColor('#1677d2',3,this)">🟦 Blau</button>
-<button onclick="setColor('#198754',3,this)">🟩 Grün</button>
-<button onclick="erase(this)">🧽 Radierer</button>
-<button onclick="undo()">↩️ Rückgängig</button>
-<button onclick="clearCanvas()">🗑️ Löschen</button>
-<button class="done" onclick="alert('Skizze-Test beendet 👍🏻')">✓ Fertig</button>
+<header><h1>TechPilot</h1><div class="sub">Digitale Baustellenaufnahme für HKLS-, Elektro- und PV-Techniker.</div></header>
+<main>
+<section id="home">
+<div class="step"><h2>Guten Tag 👋</h2><div class="sub">Projekte anlegen, öffnen und Besichtigungen fortsetzen.</div></div>
+<div class="step"><button class="primary" style="width:100%" onclick="newProject()">＋ Neues Projekt</button></div>
+<div id="projectList"></div>
+</section>
+<section id="create" class="hidden">
+<button class="back" onclick="showHome()">← Zurück</button>
+<div class="step"><h2>Neues Projekt</h2><div class="sub">Nur die wichtigsten Angaben am Anfang.</div></div>
+<div class="step">
+<h3>1. Kunde</h3>
+<label>Name / Firma</label><input id="cname" placeholder="z. B. Max Mustermann">
+<label>Telefon (optional)</label><input id="cphone" type="tel" placeholder="Telefonnummer">
+<label>E-Mail (optional)</label><input id="cemail" type="email" placeholder="E-Mail-Adresse">
 </div>
-<canvas id="canvas"></canvas>
+<div class="step">
+<h3>2. Projekt</h3>
+<label>Projektbezeichnung</label><input id="pname" placeholder="z. B. Heizungssanierung">
+<label>Adresse / Baustelle</label><input id="paddress" placeholder="Straße, Ort">
+<label>Projektart</label>
+<div class="choice-grid">
+<button class="choice" onclick="chooseType(this,'Heizung')">🔥 Heizung</button>
+<button class="choice" onclick="chooseType(this,'Sanitär')">🚿 Sanitär</button>
+<button class="choice" onclick="chooseType(this,'Klima')">❄️ Klima</button>
+<button class="choice" onclick="chooseType(this,'PV')">☀️ PV</button>
+<button class="choice" onclick="chooseType(this,'Neubau')">🏠 Neubau</button>
+</div>
+</div>
+<div class="step"><button class="primary" style="width:100%" onclick="createProject()">✓ Projekt anlegen & Besichtigung starten</button></div>
+</section>
+<section id="project" class="hidden"><button class="back" onclick="showHome()">← Zurück zur Projektübersicht</button><div id="projectContent"></div></section>
+</main>
+<div class="bottom"><div class="bottom-inner"><button class="secondary" onclick="showHome()">⌂ Startseite</button><button class="primary" onclick="finishVisit()">✓ Besichtigung abschließen</button></div></div>
+
 <script>
-const c=document.getElementById('canvas'),ctx=c.getContext('2d');
-let color='#111',size=3,drawing=false,lastX=0,lastY=0,history=[];
-function resize(){
- const old=document.createElement('canvas'); old.width=c.width;old.height=c.height;
- if(c.width&&c.height) old.getContext('2d').drawImage(c,0,0);
- c.width=Math.max(300,window.innerWidth-20);c.height=Math.max(300,window.innerHeight-125);
- if(old.width&&old.height)ctx.drawImage(old,0,0);
+const state={anlagenart:"",aussen:1,innen:1,devices:[],customer:{},project:{},projects:[]};
+try{state.projects=JSON.parse(localStorage.getItem("techpilot_projects")||"[]")}catch(e){state.projects=[]}
+
+function showHome(){home.classList.remove("hidden");create.classList.add("hidden");project.classList.add("hidden");renderProjects()}
+function saveProjects(){localStorage.setItem("techpilot_projects",JSON.stringify(state.projects))}
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
+function renderProjects(){
+ const b=document.getElementById("projectList");
+ if(!state.projects.length){b.innerHTML='<div class="step"><h3>Noch keine Projekte</h3><div class="sub">Lege dein erstes Projekt an.</div></div>';return}
+ b.innerHTML='<div class="step"><h3>Meine Projekte</h3></div>'+state.projects.map((p,i)=>`<div class="step" onclick="openSaved(${i})" style="cursor:pointer"><div style="display:flex;justify-content:space-between;gap:8px"><div><b>${esc(p.customerName||"Ohne Kundennamen")}</b><div class="sub">${esc(p.name||"Ohne Projektbezeichnung")}</div><div class="sub">${esc(p.address||"")}</div></div><span class="pill">${esc(p.type)}</span></div><div class="sub" style="margin-top:9px">${p.status==="completed"?"🟢 Besichtigung abgeschlossen":"🟡 Besichtigung offen"}</div></div>`).join("")
 }
-resize();window.addEventListener('resize',resize);
-function point(e){const r=c.getBoundingClientRect();return [e.clientX-r.left,e.clientY-r.top]}
-c.addEventListener('pointerdown',e=>{e.preventDefault();drawing=true;[lastX,lastY]=point(e);history.push(ctx.getImageData(0,0,c.width,c.height));c.setPointerCapture(e.pointerId)});
-c.addEventListener('pointermove',e=>{if(!drawing)return;e.preventDefault();let [x,y]=point(e);ctx.strokeStyle=color;ctx.lineWidth=size;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(x,y);ctx.stroke();lastX=x;lastY=y});
-c.addEventListener('pointerup',()=>drawing=false);c.addEventListener('pointercancel',()=>drawing=false);
-function setColor(c1,s,btn){color=c1;size=s;document.querySelectorAll('.toolbar button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
-function erase(btn){color='#fff';size=20;document.querySelectorAll('.toolbar button').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
-function undo(){if(history.length)ctx.putImageData(history.pop(),0,0)}
-function clearCanvas(){ctx.clearRect(0,0,c.width,c.height);history=[]}
+function newProject(){
+ document.getElementById("home").classList.add("hidden");document.getElementById("project").classList.add("hidden");document.getElementById("create").classList.remove("hidden");
+ document.querySelectorAll("#create input").forEach(x=>x.value="");document.querySelectorAll("#create .choice").forEach(x=>x.classList.remove("selected"));state.project.type=""
+}
+function chooseType(el,type){state.project.type=type;el.parentElement.querySelectorAll(".choice").forEach(x=>x.classList.remove("selected"));el.classList.add("selected")}
+function createProject(){
+ const p={id:Date.now(),customerName:document.getElementById("cname").value.trim(),phone:document.getElementById("cphone").value.trim(),email:document.getElementById("cemail").value.trim(),name:document.getElementById("pname").value.trim(),address:document.getElementById("paddress").value.trim(),type:state.project.type||"Projekt",status:"open"};
+ if(!p.customerName&&!p.name){alert("Bitte Kunde oder Projektbezeichnung eingeben.");return}
+ state.projects.unshift(p);saveProjects();openSaved(0)
+}
+function openSaved(i){
+ const p=state.projects[i];state.customer={name:p.customerName,phone:p.phone,email:p.email};state.project={...p};
+ document.getElementById("home").classList.add("hidden");document.getElementById("create").classList.add("hidden");document.getElementById("project").classList.remove("hidden");
+ if(p.type==="Klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];renderKlima()}
+ else if(p.type==="Heizung")renderHeizung();else renderSimpleSaved(p)
+}
+function renderSimpleSaved(p){projectContent.innerHTML=`<div class="step"><h2>${esc(p.type)}</h2><div class="sub"><b>${esc(p.customerName)}</b> · ${esc(p.name)}</div><div class="sub">${esc(p.address)}</div></div><div class="step"><label>Notiz / Besonderheiten</label><textarea placeholder="Kurze Notizen …"></textarea></div>`}
+function completeProject(){if(state.project.id){let i=state.projects.findIndex(x=>x.id===state.project.id);if(i>=0){state.projects[i].status="completed";saveProjects()}}}
+function openProject(t){
+ home.classList.add("hidden");project.classList.remove("hidden");
+ if(t==="klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];renderKlima()}
+ else if(t==="heizung"){renderHeizung()}
+ else projectContent.innerHTML='<div class="step"><h2>'+({heizung:"Heizung",sanitaer:"Sanitär",pv:"PV",neubau:"Neubau"}[t])+'</h2><div class="sub">Diesen Bereich bauen wir als Nächstes mit derselben schnellen Auswahl-Logik aus.</div><label>Notiz / Besonderheiten</label><textarea placeholder="Kurze Notizen …"></textarea></div>';
+}
+function selectAnlage(v){state.anlagenart=v;if(v==="Single Split"){state.aussen=1;state.innen=1}renderKlima()}
+function changeCount(which,d){
+ if(which==="aussen")state.aussen=Math.max(1,Math.min(4,state.aussen+d));
+ if(which==="innen")state.innen=Math.max(1,Math.min(8,state.innen+d));
+ if(state.anlagenart==="Single Split"){state.aussen=1;state.innen=1}
+ while(state.devices.length<state.innen)state.devices.push({});
+ renderKlima()
+}
+function save(i,k,v){if(!state.devices[i])state.devices[i]={};state.devices[i][k]=v}
+function choice(i,k,v){save(i,k,v);renderKlima()}
+
+function renderKlima(){
+ let dev="";
+ const rooms=["Wohnzimmer","Schlafzimmer","Kinderzimmer 01","Kinderzimmer 02","Kinderzimmer 03","Büro","Küche","Esszimmer","Gang","Bad","Gästezimmer","Sonstiger Raum"];
+ const types=["Wandgerät","Deckengerät","Truhengerät","Kanaleinbaugerät"];
+ const powers=["2,0 kW","2,5 kW","3,5 kW","4,2 kW","5,0 kW","6,0 kW","7,0 kW"];
+ for(let i=0;i<state.innen;i++){
+  let d=state.devices[i]||{};
+  dev+=`
+  <div class="device"><h3>Innengerät ${i+1}</h3>
+  <label>Raum / Position</label>
+  <select onchange="save(${i},'raum',this.value)"><option value="">Bitte auswählen</option>${rooms.map(x=>`<option ${d.raum===x?"selected":""}>${x}</option>`).join("")}</select>
+  <label>Zu welchem Außengerät?</label>
+  <select onchange="save(${i},'aussen',this.value)">${Array.from({length:state.aussen},(_,n)=>`<option value="${n+1}" ${String(d.aussen||1)===String(n+1)?"selected":""}>Außengerät ${n+1}</option>`).join("")}</select>
+  <label>Gerätetyp</label>
+  <select onchange="save(${i},'typ',this.value)"><option value="">Bitte auswählen</option>${types.map(x=>`<option ${d.typ===x?"selected":""}>${x}</option>`).join("")}</select>
+  <label>Leistung</label>
+  <select onchange="save(${i},'leistung',this.value)"><option value="">Bitte auswählen</option>${powers.map(x=>`<option ${d.leistung===x?"selected":""}>${x}</option>`).join("")}</select>
+  <label>Leitungslänge Innengerät → Außengerät</label>
+  <div style="display:grid;grid-template-columns:1fr 95px;gap:8px"><input type="number" min="0" step="0.5" value="${d.laenge||""}" oninput="save(${i},'laenge',this.value)" placeholder="z. B. 8"><select><option>m</option></select></div>
+  <label>Kondensat</label>
+  <select onchange="save(${i},'kondensat',this.value)"><option value="">Bitte auswählen</option>${["Fallende Leitung","Kondensatpumpe","Anschluss an Abfluss","Behälter / Notlösung"].map(x=>`<option ${d.kondensat===x?"selected":""}>${x}</option>`).join("")}</select>
+  <label>Notiz / Besonderheiten</label><textarea oninput="save(${i},'notiz',this.value)" placeholder="Leitungsweg, Anschlusshöhe …">${d.notiz||""}</textarea>
+  <label>Fotos Innengerät / Anschluss</label><input type="file" accept="image/*" capture="environment" multiple onchange="showPhotoNames(this,'photos${i}')"><div id="photos${i}" class="sub" style="margin-top:7px"></div></div>`;
+ }
+ let outs="";
+ for(let n=0;n<state.aussen;n++){
+  let a=(state.outdoor&&state.outdoor[n])||{};
+  outs+=`<div class="device"><h3>Außengerät ${n+1}</h3>
+  <label>Aufstellort</label><select onchange="saveOutdoor(${n},'ort',this.value)"><option value="">Bitte auswählen</option>${["Terrasse","Balkon","Fassade","Dach","Bodenaufstellung","Carport / Überdachung","Sonstiger Ort"].map(x=>`<option ${a.ort===x?"selected":""}>${x}</option>`).join("")}</select>
+  <label>Aufstellung</label><select onchange="saveOutdoor(${n},'aufstellung',this.value)"><option value="">Bitte auswählen</option>${["Boden","Wandkonsole","Dachkonsole","Balkonkonsole","Sonstige"].map(x=>`<option ${a.aufstellung===x?"selected":""}>${x}</option>`).join("")}</select>
+  <label>Schall / Nachbarschaft</label><select onchange="saveOutdoor(${n},'schall',this.value)"><option value="">Bitte auswählen</option>${["unproblematisch","prüfen","kritisch"].map(x=>`<option ${a.schall===x?"selected":""}>${x}</option>`).join("")}</select>
+  <label>Foto Außengerät / Aufstellort</label><input type="file" accept="image/*" capture="environment" multiple onchange="showPhotoNames(this,'aussenphotos${n}')"><div id="aussenphotos${n}" class="sub" style="margin-top:7px"></div>
+  <label>Notiz</label><textarea oninput="saveOutdoor(${n},'notiz',this.value)" placeholder="Abstände, Nachbarschaft, Untergrund …">${a.notiz||""}</textarea></div>`;
+ }
+ const total=state.devices.reduce((sum,d)=>sum+(parseFloat(String(d.laenge||"").replace(",","."))||0),0);
+ projectContent.innerHTML=`
+ <div class="step"><h2>❄️ Klima – Baustellenaufnahme</h2><div class="sub">Single Split und Multi Split werden getrennt und möglichst mit Auswahlfeldern aufgenommen.</div></div>
+ <div class="step"><h3>1. Anlagenart</h3><div class="choice-grid">
+ <button class="choice ${state.anlagenart==='Single Split'?'selected':''}" onclick="selectAnlage('Single Split')">Single Split</button>
+ <button class="choice ${state.anlagenart==='Multi Split'?'selected':''}" onclick="selectAnlage('Multi Split')">Multi Split</button></div></div>
+ ${state.anlagenart?`
+ <div class="step"><h3>2. Geräteanzahl</h3>
+ <label>Außengeräte</label><div class="counter"><button onclick="changeCount('aussen',-1)">−</button><strong>${state.aussen}</strong><button onclick="changeCount('aussen',1)">+</button></div>
+ <label>Innengeräte</label><div class="counter"><button onclick="changeCount('innen',-1)">−</button><strong>${state.innen}</strong><button onclick="changeCount('innen',1)">+</button></div>
+ <div class="note">Bei Multi Split können Innengeräte einem bestimmten Außengerät zugeordnet werden.</div></div>
+ <div class="step"><h3>3. Innengeräte</h3>${dev}</div>
+ <div class="step"><h3>4. Außengeräte</h3>${outs}</div>
+ <div class="step"><h3>5. Stromversorgung / Absicherung</h3>
+ <label>Versorgung</label><select><option>Bitte auswählen</option><option>eigener Stromkreis</option><option>bestehender Stromkreis</option><option>prüfen</option></select>
+ <label>Absicherung</label><select><option>Bitte auswählen</option><option>10 A</option><option>13 A</option><option>16 A</option><option>20 A</option><option>prüfen</option></select>
+ <label>Leitungsweg</label><select><option>Bitte auswählen</option><option>Aufputz</option><option>Unterputz</option><option>Kabelkanal</option><option>über Dachboden</option><option>über Keller</option><option>prüfen</option></select>
+ <label>Foto Zählerkasten / Verteiler</label><input type="file" accept="image/*" capture="environment" multiple onchange="showPhotoNames(this,'stromphotos')"><div id="stromphotos" class="sub" style="margin-top:7px"></div></div>
+ <div class="step"><h3>6. Gemeinsame Leitungswege</h3>
+ <label>Besonderheiten Leitungsweg</label><textarea placeholder="Kabelkanal, Durchbrüche, Schächte, über Spitzboden …"></textarea>
+ <label>Fotos Leitungswege</label><input type="file" accept="image/*" capture="environment" multiple></div>
+ <div class="step"><h3>7. Skizze</h3><button type="button" class="primary" onclick="openClimateSketch('Klima – Aufstellung / Leitungsweg')">✏️ Skizze hinzufügen</button></div>
+ <div class="step summary"><h3><span class="check">✓</span> Zusammenfassung</h3>
+ <p><b>Anlage:</b> ${state.anlagenart}</p><p><b>Außengeräte:</b> ${state.aussen} · <b>Innengeräte:</b> ${state.innen}</p>
+ <p><b>Gesamtleitung Innengerät → Außengerät:</b> ${total.toLocaleString("de-DE",{maximumFractionDigits:1})} m</p>
+ ${state.devices.map((d,i)=>`<p><b>Innengerät ${i+1}:</b> ${d.raum||"Raum offen"} · ${d.typ||"Typ offen"} · ${d.leistung||"Leistung offen"} · ${d.laenge?d.laenge+" m":"Leitungslänge offen"}</p>`).join("")}
+ <button type="button" class="secondary" onclick="createKlimaPDFReport()">📄 PDF-Report öffnen</button>
+ <button type="button" class="primary" onclick="finishVisit()">✓ Besichtigung abschließen</button></div>`:""}`;
+}
+function saveOutdoor(i,k,v){if(!state.outdoor)state.outdoor=[];if(!state.outdoor[i])state.outdoor[i]={};state.outdoor[i][k]=v}
+function openClimateSketch(title){
+ const m=document.createElement('div');m.className='climateSketchModal';m.style='position:fixed;inset:0;background:#fff;z-index:99999;padding:10px;display:flex;flex-direction:column';
+ m.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>✏️ ${title}</b><button onclick="climateSketchColor('#111')">⬛</button><button onclick="climateSketchColor('#d22')">🟥</button><button onclick="climateSketchColor('#1677d2')">🟦</button><button onclick="climateSketchColor('#198754')">🟩</button><button onclick="climateSketchErase()">🧽</button><button onclick="climateSketchClear()">🗑️</button><button onclick="this.closest('.climateSketchModal').remove()">✓ Fertig</button></div><canvas id="climateSketchCanvas" style="flex:1;margin-top:8px;border:1px solid #ccc;background-image:linear-gradient(#d9e1e8 1px,transparent 1px),linear-gradient(90deg,#d9e1e8 1px,transparent 1px);background-size:20px 20px;touch-action:none"></canvas>`;
+ document.body.appendChild(m);const c=document.getElementById('climateSketchCanvas'),ctx=c.getContext('2d');c.width=innerWidth-20;c.height=innerHeight-75;window._climateSketch={ctx,color:'#111',size:3,down:false};
+ c.onpointerdown=e=>{window._climateSketch.down=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY)};c.onpointermove=e=>{if(!window._climateSketch.down)return;ctx.strokeStyle=window._climateSketch.color;ctx.lineWidth=window._climateSketch.size;ctx.lineCap='round';ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY)};c.onpointerup=()=>window._climateSketch.down=false;c.onpointercancel=()=>window._climateSketch.down=false;
+}
+function climateSketchColor(c){window._climateSketch.color=c;window._climateSketch.size=3}
+function climateSketchErase(){window._climateSketch.color='#fff';window._climateSketch.size=18}
+function climateSketchClear(){const c=document.getElementById('climateSketchCanvas');c.getContext('2d').clearRect(0,0,c.width,c.height)}
+function createKlimaPDFReport(){
+ const w=window.open("","_blank");if(!w){alert("Bitte Pop-ups für TechPilot erlauben.");return}
+ let total=state.devices.reduce((s,d)=>s+(parseFloat(String(d.laenge||"").replace(",","."))||0),0);
+ w.document.write(`<html><head><title>TechPilot – Klima Report</title><style>body{font-family:Arial;padding:28px}h1{font-size:24px}h2{margin-top:24px;border-bottom:1px solid #ccc;padding-bottom:6px}.card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0;page-break-inside:avoid}button{padding:10px 14px;border:0;border-radius:8px;background:#111;color:#fff}@media print{button{display:none}}</style></head><body><h1>TechPilot – Klima Besichtigungsreport</h1><div class="card"><b>Kunde:</b> ${esc((state.customer||{}).name||"")}<br><b>Projekt:</b> ${esc((state.project||{}).name||"")}<br><b>Adresse:</b> ${esc((state.project||{}).address||"")}<br><b>Datum:</b> ${new Date().toLocaleDateString("de-DE")}</div><div class="card"><b>Anlage:</b> ${esc(state.anlagenart)}<br><b>Außengeräte:</b> ${state.aussen}<br><b>Innengeräte:</b> ${state.innen}<br><b>Gesamtleitung:</b> ${total.toLocaleString("de-DE",{maximumFractionDigits:1})} m</div>`);
+ state.devices.slice(0,state.innen).forEach((d,i)=>w.document.write(`<div class="card"><h2>Innengerät ${i+1}</h2>Raum: ${esc(d.raum||"")}<br>Außengerät: ${esc(d.aussen||"1")}<br>Typ: ${esc(d.typ||"")}<br>Leistung: ${esc(d.leistung||"")}<br>Leitung: ${esc(d.laenge||"")} m<br>Kondensat: ${esc(d.kondensat||"")}<br>Notiz: ${esc(d.notiz||"")}</div>`));
+ w.document.write('<button onclick="window.print()">🖨️ Drucken / Als PDF speichern</button></body></html>');w.document.close();
+}
+
+function renderHeizung(){
+ projectContent.innerHTML=`
+ <div class="step"><h2>Heizung – Baustellenaufnahme</h2>
+ <div class="sub">Schnelle Auswahl statt langer Eingaben. Details können jederzeit ergänzt werden.</div></div>
+
+ <div class="step"><h3>1. Was ist geplant?</h3>
+ <div class="choice-grid">
+ <button class="choice selected">Heizungssanierung</button>
+ <button class="choice">Neue Heizung</button>
+ <button class="choice">Neubau</button>
+ </div></div>
+
+ <div class="step"><h3>2. Bestehender Wärmeerzeuger</h3>
+ <div class="choice-grid">
+ ${heatChoice("Ölkessel","hfuel","Öl")}
+ ${heatChoice("Koks / Kohle","hfuel","Koks / Kohle")}
+ ${heatChoice("Hackgut","hfuel","Hackgut")}
+ ${heatChoice("Stückholz","hfuel","Stückholz")}
+ ${heatChoice("Pellets","hfuel","Pellets")}
+ ${heatChoice("Kombikessel","hfuel","Kombikessel")}
+ </div>
+ <label>Hersteller / Type</label><input id="hboiler" placeholder="z. B. Hersteller, Type, Baujahr">
+ <label>Leistung (optional)</label><input type="number" id="hpower" placeholder="z. B. 25 kW">
+ <label>Foto vom Kessel / Typenschild</label>
+ <input type="file" accept="image/*" capture="environment" multiple>
+ </div>
+
+ <div class="step"><h3>3. Heizraum</h3>
+ <div class="choice-grid">
+ <div><label>Länge (m)</label><input type="number" step="0.01" id="hrL"></div>
+ <div><label>Breite (m)</label><input type="number" step="0.01" id="hrW"></div>
+ </div>
+ <label>Raumhöhe (m)</label><input type="number" step="0.01" id="hrH">
+ <label>Heizraumtür / Zugang</label><input placeholder="z. B. 80 cm, Kellerstiege, enge Tür">
+ <label>Fotos Heizraum</label><input type="file" accept="image/*" capture="environment" multiple>
+ </div>
+
+ <div class="step"><h3>4. Hydraulik</h3>
+ <div class="choice-grid">
+ ${heatChoice("Direkter Heizkreis","hyd","Direkter Heizkreis")}
+ ${heatChoice("Mischergruppe","hyd","Mischergruppe")}
+ ${heatChoice("Mehrere Heizkreise","hyd","Mehrere Heizkreise")}
+ </div>
+ <label>Anzahl Heizkreise</label>
+ <div class="counter"><button onclick="heatCount(-1)">−</button><strong id="heatCircuitCount">1</strong><button onclick="heatCount(1)">+</button></div>
+ <label>Aufteilung der Kreise</label>
+ <textarea placeholder="z. B. EG FBH, OG Heizkörper, Handtuchheizkörper …"></textarea>
+ <label>Verrohrung / hydraulische Besonderheiten</label>
+ <textarea placeholder="z. B. Stahl, CU, Kunststoff, alte Pumpengruppe …"></textarea>
+ <label>Foto Hydraulik</label><input type="file" accept="image/*" capture="environment" multiple>
+ </div>
+
+ <div class="step"><h3>5. Wärmeabgabe</h3>
+ <div class="choice-grid">
+ ${heatChoice("Heizkörper","emit","Heizkörper")}
+ ${heatChoice("Fußbodenheizung","emit","Fußbodenheizung")}
+ ${heatChoice("Heizkörper + FBH","emit","Heizkörper + FBH")}
+ </div>
+ <label>Heizkörper / Heizflächen – Besonderheiten</label>
+ <textarea placeholder="z. B. alte Heizkörper, eventuell Vergrößerung für Wärmepumpe …"></textarea>
+ </div>
+
+ <div class="step"><h3>6. Speicher</h3>
+ <div class="choice-grid">
+ ${heatChoice("Kein Speicher","storage","Kein Speicher")}
+ ${heatChoice("Pufferspeicher","storage","Pufferspeicher")}
+ ${heatChoice("Warmwasserspeicher / Boiler","storage","Warmwasserspeicher / Boiler")}
+ ${heatChoice("Hygiene-Puffer mit Edelstahlwellrohr","storage","Hygiene-Puffer")}
+ </div>
+ <label>Volumen / vorhandener Speicher</label><input placeholder="z. B. 800 l, 300 l Boiler …">
+ <label>Foto Speicher</label><input type="file" accept="image/*" capture="environment" multiple>
+ </div>
+
+ <div class="step"><h3>7. Regelung</h3>
+ <div class="choice-grid">
+ ${heatChoice("Raumgerät vorhanden","control","Raumgerät vorhanden")}
+ ${heatChoice("Kein Raumgerät","control","Kein Raumgerät")}
+ ${heatChoice("Regelung prüfen","control","Regelung prüfen")}
+ </div>
+ <label>Regelung / Hersteller / Besonderheiten</label><textarea placeholder="z. B. Regelung im Heizraum, Raumgerät EG …"></textarea>
+ <label>Foto Regelung</label><input type="file" accept="image/*" capture="environment" multiple>
+ </div>
+
+ <div class="step"><h3>8. Kamin</h3>
+ <div class="choice-grid">
+ <div><label>Durchmesser (mm)</label><input type="number" id="chimD"></div>
+ <div><label>Höhe (m)</label><input type="number" step="0.1" id="chimH"></div>
+ </div>
+ <div class="choice-grid">
+ ${heatChoice("Sanierung nötig","chimney","Sanierung nötig")}
+ ${heatChoice("Bestand kann bleiben","chimney","Bestand kann bleiben")}
+ ${heatChoice("Anschlusshöhe prüfen","chimney","Anschlusshöhe prüfen")}
+ </div>
+ <label>Notiz Kamin</label><textarea placeholder="z. B. Bestand wahrscheinlich verwendbar …"></textarea>
+ <label>Fotos Kamin</label><input type="file" accept="image/*" capture="environment" multiple>
+ </div>
+
+ <div class="step"><h3>9. Energieverbrauch</h3>
+ <label>Verbrauch pro Jahr</label><input type="number" id="hcons" placeholder="z. B. 2000">
+ <div class="choice-grid">
+ ${heatChoice("Liter Öl","consunit","Liter Öl")}
+ ${heatChoice("kg Pellets","consunit","kg Pellets")}
+ ${heatChoice("rm Stückholz","consunit","rm Stückholz")}
+ ${heatChoice("t Hackgut","consunit","t Hackgut")}
+ </div>
+ <div class="note">Überschlagsrechnung: Bei Öl rechnen wir mit ca. 10 kWh/l. Die Berechnung ist nur ein grober Anhaltspunkt und kein Energieausweis.</div>
+ </div>
+
+ <div class="step"><h3>10. Gewünschte neue Heizung</h3>
+ <div class="choice-grid">
+ ${heatChoice("Pellets","newheat","Pellets")}
+ ${heatChoice("Stückholz","newheat","Stückholz")}
+ ${heatChoice("Kombikessel","newheat","Kombikessel")}
+ ${heatChoice("Hackgut","newheat","Hackgut")}
+ ${heatChoice("Luft-Wärmepumpe","newheat","Luft-Wärmepumpe")}
+ ${heatChoice("Sole-Wärmepumpe","newheat","Sole-Wärmepumpe")}
+ </div>
+ </div>
+
+ <div class="step"><h3>11. Allgemeine Fotos & Notizen</h3>
+ <label>Fotos</label><input type="file" accept="image/*" capture="environment" multiple>
+ <label>Offene Punkte / Kundenwünsche</label><textarea placeholder="Was soll ins Angebot? Was muss noch geprüft werden?"></textarea>
+ </div>
+
+ <div class="step summary"><h3><span class="check">✓</span> Aufnahme-Prinzip</h3>
+ <p>Heizraum → Kessel → Hydraulik → Heizkreise → Wärmeabgabe → Speicher → Regelung → Kamin → Verbrauch → neue Heizung.</p>
+ <p class="sub">Genau in dieser Reihenfolge kannst du die Besichtigung abarbeiten und währenddessen Fotos aufnehmen.</p>
+ </div>`;
+}
+function heatChoice(label,group,value){
+ return `<button type="button" class="choice" onclick="this.parentElement.querySelectorAll('.choice').forEach(b=>b.classList.remove('selected'));this.classList.add('selected')">${label}</button>`;
+}
+function heatCount(d){
+ const e=document.getElementById("heatCircuitCount");
+ let n=Math.max(1,Math.min(12,parseInt(e.textContent)+d));
+ e.textContent=n;
+}
+
+function finishVisit(){completeProject();alert("✓ Besichtigung abgeschlossen\n\nDas Projekt wurde gespeichert.");showHome()}
+renderProjects();
 </script>
 </body>
 </html>
