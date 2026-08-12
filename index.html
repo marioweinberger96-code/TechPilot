@@ -18,7 +18,7 @@ label{display:block;font-size:13px;color:#66717d;margin:13px 0 6px}input,select,
 .bottom{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #dfe5e9;padding:10px 14px}.bottom-inner{max-width:720px;margin:auto;display:flex;gap:10px}.bottom button{flex:1}
 .note{font-size:13px;color:#66717d;background:#f4f6f7;border-radius:12px;padding:10px;margin-top:10px}
 @media(max-width:420px){.grid,.choice-grid{grid-template-columns:1fr 1fr}main{padding-left:10px;padding-right:10px}}
-</style>
+.danger{background:#f3d6d6;color:#8a1c1c}.secondary{background:#e9ecef;color:#222}</style>
 </head>
 <body>
 <header><h1>TechPilot</h1><div class="sub">Digitale Baustellenaufnahme für HKLS-, Elektro- und PV-Techniker.</div></header>
@@ -65,8 +65,37 @@ function saveProjects(){localStorage.setItem("techpilot_projects",JSON.stringify
 function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]))}
 function renderProjects(){
  const b=document.getElementById("projectList");
- if(!state.projects.length){b.innerHTML='<div class="step"><h3>Noch keine Projekte</h3><div class="sub">Lege dein erstes Projekt an.</div></div>';return}
- b.innerHTML='<div class="step"><h3>Meine Projekte</h3></div>'+state.projects.map((p,i)=>`<div class="step" onclick="openSaved(${i})" style="cursor:pointer"><div style="display:flex;justify-content:space-between;gap:8px"><div><b>${esc(p.customerName||"Ohne Kundennamen")}</b><div class="sub">${esc(p.name||"Ohne Projektbezeichnung")}</div><div class="sub">${esc(p.address||"")}</div></div><span class="pill">${esc(p.type)}</span></div><div class="sub" style="margin-top:9px">${p.status==="completed"?"🟢 Besichtigung abgeschlossen":"🟡 Besichtigung offen"}</div></div>`).join("")
+ const open=state.projects.filter(p=>p.status!=="completed");
+ const done=state.projects.filter(p=>p.status==="completed");
+ const card=(p,i)=>`<div class="step" style="margin-bottom:10px">
+   <div onclick="openSaved(${i})" style="cursor:pointer">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">
+     <div><b>${esc(p.customerName||"Ohne Kundennamen")}</b><div class="sub">${esc(p.name||"Ohne Projektbezeichnung")}</div><div class="sub">${esc(p.address||"")}</div></div>
+     <span class="pill">${p.status==="completed"?"🟢 Abgeschlossen":"🟡 Offen"}</span>
+    </div>
+   </div>
+   <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+    <button class="secondary" onclick="openSaved(${i})">📂 Öffnen</button>
+    <button class="danger" onclick="deleteProject(${i},event)">🗑️ Löschen</button>
+   </div>
+  </div>`;
+ if(!state.projects.length){
+   b.innerHTML='<div class="step"><h3>Noch keine Projekte</h3><div class="sub">Lege dein erstes Projekt an.</div></div>';return;
+ }
+ b.innerHTML=`
+ <div class="step"><h3>🟡 Offene Besichtigungen (${open.length})</h3></div>
+ ${open.length?open.map(p=>card(p,state.projects.indexOf(p))).join(""):'<div class="step"><div class="sub">Keine offenen Besichtigungen.</div></div>'}
+ <div class="step" style="margin-top:18px"><h3>🟢 Abgeschlossene Besichtigungen (${done.length})</h3></div>
+ ${done.length?done.map(p=>card(p,state.projects.indexOf(p))).join(""):'<div class="step"><div class="sub">Noch keine abgeschlossenen Besichtigungen.</div></div>'}`;
+}
+function deleteProject(i,event){
+ if(event)event.stopPropagation();
+ const p=state.projects[i];
+ if(!p)return;
+ if(!confirm(`Projekt "${p.name||p.customerName||"ohne Bezeichnung"}" wirklich löschen? Alle im Projekt gespeicherten Daten, Fotos und Skizzen werden entfernt.`))return;
+ state.projects.splice(i,1);
+ saveProjects();
+ renderProjects();
 }
 function newProject(){
  document.getElementById("home").classList.add("hidden");document.getElementById("project").classList.add("hidden");document.getElementById("create").classList.remove("hidden");
@@ -81,11 +110,31 @@ function createProject(){
 function openSaved(i){
  const p=state.projects[i];state.customer={name:p.customerName,phone:p.phone,email:p.email};state.project={...p};
  document.getElementById("home").classList.add("hidden");document.getElementById("create").classList.add("hidden");document.getElementById("project").classList.remove("hidden");
- if(p.type==="Klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];state.climateSketch="";renderKlima()}
+ if(p.type==="Klima"){
+  const d=p.climateData||{};
+  state.anlagenart=d.anlagenart||"";
+  state.aussen=d.aussen||1;
+  state.innen=d.innen||1;
+  state.devices=d.devices||[];
+  state.outdoor=d.outdoor||[];
+  state.climateSketch=d.climateSketch||"";
+  renderKlima()
+}
  else if(p.type==="Heizung")renderHeizung();else renderSimpleSaved(p)
 }
 function renderSimpleSaved(p){projectContent.innerHTML=`<div class="step"><h2>${esc(p.type)}</h2><div class="sub"><b>${esc(p.customerName)}</b> · ${esc(p.name)}</div><div class="sub">${esc(p.address)}</div></div><div class="step"><label>Notiz / Besonderheiten</label><textarea placeholder="Kurze Notizen …"></textarea></div>`}
-function completeProject(){if(state.project.id){let i=state.projects.findIndex(x=>x.id===state.project.id);if(i>=0){state.projects[i].status="completed";saveProjects()}}}
+function completeProject(){
+ if(!state.project.id)return;
+ let i=state.projects.findIndex(x=>x.id===state.project.id);
+ if(i>=0){
+  state.projects[i].status="completed";
+  state.projects[i].climateData={
+   anlagenart:state.anlagenart,aussen:state.aussen,innen:state.innen,
+   devices:state.devices,outdoor:state.outdoor,climateSketch:state.climateSketch||""
+  };
+  saveProjects();
+ }
+}
 function openProject(t){
  home.classList.add("hidden");project.classList.remove("hidden");
  if(t==="klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];state.climateSketch="";renderKlima()}
@@ -345,7 +394,18 @@ function heatCount(d){
  e.textContent=n;
 }
 
-function finishVisit(){completeProject();alert("✓ Besichtigung abgeschlossen\n\nDas Projekt wurde gespeichert.");showHome()}
+function persistCurrentProject(){
+ if(!state.project.id)return;
+ const i=state.projects.findIndex(x=>x.id===state.project.id);
+ if(i>=0){
+  state.projects[i].climateData={
+   anlagenart:state.anlagenart,aussen:state.aussen,innen:state.innen,
+   devices:state.devices,outdoor:state.outdoor,climateSketch:state.climateSketch||""
+  };
+  saveProjects();
+ }
+}
+function finishVisit(){persistCurrentProject();completeProject();alert("✓ Besichtigung abgeschlossen\n\nDas Projekt wurde gespeichert.");showHome()}
 renderProjects();
 </script>
 </body>
