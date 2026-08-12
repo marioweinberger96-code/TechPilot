@@ -81,23 +81,38 @@ function createProject(){
 function openSaved(i){
  const p=state.projects[i];state.customer={name:p.customerName,phone:p.phone,email:p.email};state.project={...p};
  document.getElementById("home").classList.add("hidden");document.getElementById("create").classList.add("hidden");document.getElementById("project").classList.remove("hidden");
- if(p.type==="Klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];renderKlima()}
+ if(p.type==="Klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];state.climateSketch="";renderKlima()}
  else if(p.type==="Heizung")renderHeizung();else renderSimpleSaved(p)
 }
 function renderSimpleSaved(p){projectContent.innerHTML=`<div class="step"><h2>${esc(p.type)}</h2><div class="sub"><b>${esc(p.customerName)}</b> · ${esc(p.name)}</div><div class="sub">${esc(p.address)}</div></div><div class="step"><label>Notiz / Besonderheiten</label><textarea placeholder="Kurze Notizen …"></textarea></div>`}
 function completeProject(){if(state.project.id){let i=state.projects.findIndex(x=>x.id===state.project.id);if(i>=0){state.projects[i].status="completed";saveProjects()}}}
 function openProject(t){
  home.classList.add("hidden");project.classList.remove("hidden");
- if(t==="klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];renderKlima()}
+ if(t==="klima"){state.anlagenart="";state.aussen=1;state.innen=1;state.devices=[];state.outdoor=[];state.climateSketch="";renderKlima()}
  else if(t==="heizung"){renderHeizung()}
  else projectContent.innerHTML='<div class="step"><h2>'+({heizung:"Heizung",sanitaer:"Sanitär",pv:"PV",neubau:"Neubau"}[t])+'</h2><div class="sub">Diesen Bereich bauen wir als Nächstes mit derselben schnellen Auswahl-Logik aus.</div><label>Notiz / Besonderheiten</label><textarea placeholder="Kurze Notizen …"></textarea></div>';
 }
-function selectAnlage(v){state.anlagenart=v;if(v==="Single Split"){state.aussen=1;state.innen=1}renderKlima()}
+function selectAnlage(v){
+ state.anlagenart=v;
+ if(v==="Single Split"){
+   state.aussen=Math.max(1,state.aussen||1);
+   state.innen=state.aussen;
+ } else {
+   state.aussen=Math.max(1,state.aussen||1);
+   state.innen=Math.max(1,state.innen||1);
+ }
+ while(state.devices.length<state.innen)state.devices.push({});
+ renderKlima()
+}
 function changeCount(which,d){
  if(which==="aussen")state.aussen=Math.max(1,Math.min(4,state.aussen+d));
  if(which==="innen")state.innen=Math.max(1,Math.min(8,state.innen+d));
- if(state.anlagenart==="Single Split"){state.aussen=1;state.innen=1}
+ if(state.anlagenart==="Single Split"){
+   if(which==="aussen")state.innen=state.aussen;
+   if(which==="innen")state.aussen=state.innen;
+ }
  while(state.devices.length<state.innen)state.devices.push({});
+ if(state.devices.length>state.innen)state.devices.length=state.innen;
  renderKlima()
 }
 function save(i,k,v){if(!state.devices[i])state.devices[i]={};state.devices[i][k]=v}
@@ -147,7 +162,7 @@ function renderKlima(){
  <div class="step"><h3>2. Geräteanzahl</h3>
  <label>Außengeräte</label><div class="counter"><button onclick="changeCount('aussen',-1)">−</button><strong>${state.aussen}</strong><button onclick="changeCount('aussen',1)">+</button></div>
  <label>Innengeräte</label><div class="counter"><button onclick="changeCount('innen',-1)">−</button><strong>${state.innen}</strong><button onclick="changeCount('innen',1)">+</button></div>
- <div class="note">Bei Multi Split können Innengeräte einem bestimmten Außengerät zugeordnet werden.</div></div>
+ <div class="note">Bei Single Split gilt 1 Außengerät = 1 Innengerät. Mehrere unabhängige Single-Split-Anlagen sind möglich. Bei Multi Split können mehrere Innengeräte einem Außengerät zugeordnet werden.</div></div>
  <div class="step"><h3>3. Innengeräte</h3>${dev}</div>
  <div class="step"><h3>4. Außengeräte</h3>${outs}</div>
  <div class="step"><h3>5. Stromversorgung / Absicherung</h3>
@@ -169,18 +184,26 @@ function renderKlima(){
 function saveOutdoor(i,k,v){if(!state.outdoor)state.outdoor=[];if(!state.outdoor[i])state.outdoor[i]={};state.outdoor[i][k]=v}
 function openClimateSketch(title){
  const m=document.createElement('div');m.className='climateSketchModal';m.style='position:fixed;inset:0;background:#fff;z-index:99999;padding:10px;display:flex;flex-direction:column';
- m.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>✏️ ${title}</b><button onclick="climateSketchColor('#111')">⬛</button><button onclick="climateSketchColor('#d22')">🟥</button><button onclick="climateSketchColor('#1677d2')">🟦</button><button onclick="climateSketchColor('#198754')">🟩</button><button onclick="climateSketchErase()">🧽</button><button onclick="climateSketchClear()">🗑️</button><button onclick="this.closest('.climateSketchModal').remove()">✓ Fertig</button></div><canvas id="climateSketchCanvas" style="flex:1;margin-top:8px;border:1px solid #ccc;background-image:linear-gradient(#d9e1e8 1px,transparent 1px),linear-gradient(90deg,#d9e1e8 1px,transparent 1px);background-size:20px 20px;touch-action:none"></canvas>`;
+ m.innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><b>✏️ ${title}</b><button onclick="climateSketchColor('#111')">⬛</button><button onclick="climateSketchColor('#d22')">🟥</button><button onclick="climateSketchColor('#1677d2')">🟦</button><button onclick="climateSketchColor('#198754')">🟩</button><button onclick="climateSketchErase()">🧽</button><button onclick="climateSketchClear()">🗑️</button><button onclick="saveClimateSketch();this.closest('.climateSketchModal').remove()">✓ Fertig</button></div><canvas id="climateSketchCanvas" style="flex:1;margin-top:8px;border:1px solid #ccc;background-image:linear-gradient(#d9e1e8 1px,transparent 1px),linear-gradient(90deg,#d9e1e8 1px,transparent 1px);background-size:20px 20px;touch-action:none"></canvas>`;
  document.body.appendChild(m);const c=document.getElementById('climateSketchCanvas'),ctx=c.getContext('2d');c.width=innerWidth-20;c.height=innerHeight-75;window._climateSketch={ctx,color:'#111',size:3,down:false};
  c.onpointerdown=e=>{window._climateSketch.down=true;ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY)};c.onpointermove=e=>{if(!window._climateSketch.down)return;ctx.strokeStyle=window._climateSketch.color;ctx.lineWidth=window._climateSketch.size;ctx.lineCap='round';ctx.lineTo(e.offsetX,e.offsetY);ctx.stroke();ctx.beginPath();ctx.moveTo(e.offsetX,e.offsetY)};c.onpointerup=()=>window._climateSketch.down=false;c.onpointercancel=()=>window._climateSketch.down=false;
 }
 function climateSketchColor(c){window._climateSketch.color=c;window._climateSketch.size=3}
 function climateSketchErase(){window._climateSketch.color='#fff';window._climateSketch.size=18}
 function climateSketchClear(){const c=document.getElementById('climateSketchCanvas');c.getContext('2d').clearRect(0,0,c.width,c.height)}
+function saveClimateSketch(){
+ const c=document.getElementById('climateSketchCanvas');
+ if(!c)return;
+ state.climateSketch=c.toDataURL('image/png');
+}
 function createKlimaPDFReport(){
  const w=window.open("","_blank");if(!w){alert("Bitte Pop-ups für TechPilot erlauben.");return}
  let total=state.devices.reduce((s,d)=>s+(parseFloat(String(d.laenge||"").replace(",","."))||0),0);
  w.document.write(`<html><head><title>TechPilot – Klima Report</title><style>body{font-family:Arial;padding:28px}h1{font-size:24px}h2{margin-top:24px;border-bottom:1px solid #ccc;padding-bottom:6px}.card{border:1px solid #ddd;border-radius:10px;padding:12px;margin:10px 0;page-break-inside:avoid}button{padding:10px 14px;border:0;border-radius:8px;background:#111;color:#fff}@media print{button{display:none}}</style></head><body><h1>TechPilot – Klima Besichtigungsreport</h1><div class="card"><b>Kunde:</b> ${esc((state.customer||{}).name||"")}<br><b>Projekt:</b> ${esc((state.project||{}).name||"")}<br><b>Adresse:</b> ${esc((state.project||{}).address||"")}<br><b>Datum:</b> ${new Date().toLocaleDateString("de-DE")}</div><div class="card"><b>Anlage:</b> ${esc(state.anlagenart)}<br><b>Außengeräte:</b> ${state.aussen}<br><b>Innengeräte:</b> ${state.innen}<br><b>Gesamtleitung:</b> ${total.toLocaleString("de-DE",{maximumFractionDigits:1})} m</div>`);
  state.devices.slice(0,state.innen).forEach((d,i)=>w.document.write(`<div class="card"><h2>Innengerät ${i+1}</h2>Raum: ${esc(d.raum||"")}<br>Außengerät: ${esc(d.aussen||"1")}<br>Typ: ${esc(d.typ||"")}<br>Leistung: ${esc(d.leistung||"")}<br>Leitung: ${esc(d.laenge||"")} m<br>Kondensat: ${esc(d.kondensat||"")}<br>Notiz: ${esc(d.notiz||"")}</div>`));
+ if(state.climateSketch){
+   w.document.write('<h2>Skizze</h2><div class="card"><img src="'+state.climateSketch+'" style="max-width:100%;max-height:600px;border:1px solid #ccc"></div>');
+ }
  w.document.write('<button onclick="window.print()">🖨️ Drucken / Als PDF speichern</button></body></html>');w.document.close();
 }
 
